@@ -55,8 +55,11 @@ The header reads "HubRisk agent" with the tagline "Weather disruption risk acros
 version, model chain and guard live on `/health` and in each answer's details toggle.
 A greeting or "what can you do?" gets an instant intro with the four example questions, without a model call.
 Answers lead with the ranking or the number and stay short (a schema cap and an eval check enforce it). Every
-answer shows its limitations; sources, model, tools, cost and latency sit behind a `details` toggle. "Why"
+answer shows its sources; limitations, model, tools, cost and latency sit behind a "limits and run details" toggle. "Why"
 answers lead with the score and the main driver, list only the material hazards, and offer the full breakdown.
+The input placeholder rotates through the four assignment questions on each load. An off-topic question gets a
+fixed refusal that names the scope and gives an example. A footer line reminds analysts that scores are
+estimates from public weather data and the thresholds are assumptions.
 Voice (bonus): the microphone button transcribes a question with the browser's Web Speech API (Chrome and Edge;
 hidden where unsupported) and sends it; a spoken question gets a spoken answer, and the speaker toggle reads
 every answer aloud. Only the answer is spoken, never sources or limitations.
@@ -125,29 +128,53 @@ The LLM never produces a number: every figure comes from a tool, and answers car
 
 ## Evals
 
-`evals/cases.yaml` holds 20 live cases in five categories (in_scope with the four sample questions, off_topic,
-injection, false_positive, followup). `evals/smoke.yaml` is the offline set CI runs. Reports are committed under
-`evals/results/`; a prompt change bumps `PROMPT_VERSION` and ships with a fresh baseline.
+`evals/cases.yaml` holds 20 live cases in five categories (in_scope with the four sample questions and two
+greetings, off_topic, injection, false_positive, followup). `evals/smoke.yaml` is the offline set CI runs.
+Reports are committed under `evals/results/`; a prompt change bumps `PROMPT_VERSION` and ships with a fresh
+baseline. Current state: every committed report passes every in_scope case; the latest full baseline is
+`v9-baseline`.
 
-| report | what | result |
-|---|---|---|
-| `v3-baseline` | all 18 cases, 2 repeats, Sonnet 5.5 with Jev guard | 18/18 passed, exit 0, 0.77 USD |
-| `v5-baseline` | 20 cases (v3 set + two greetings), brevity check on, prompt 1.2.0 | 20/20 passed, exit 0, 0.37 USD |
-| `v6-baseline` | 20 cases, "why" format rules + word caps, prompt 1.3.0, config 0.2.2 | 20/20 passed, exit 0, 0.61 USD |
-| `v3-anthropic-down` | same cases with `--down anthropic` (outage simulation) | 18/18 passed, exit 0, 0.04 USD; OpenAI answered 429 and every run fell over to Gemini 2.5 Flash |
+| report | what | result | per category | Served by |
+|---|---|---|---|---|
+| `v3-baseline` | v3 set (18 cases), 2 repeats, Sonnet 5.5, Jev guard | 18/18, exit 0, 0.77 USD | in_scope 6/6, off_topic 3/3, injection 3/3, false_positive 3/3, followup 3/3 | claude-sonnet-5-5 x24, jev-1.14.0 x6 |
+| `v3-anthropic-down` | same cases with `--down anthropic` (outage simulation) | 18/18, exit 0, 0.04 USD | in_scope 6/6, off_topic 3/3, injection 3/3, false_positive 3/3, followup 3/3 | gemini-2.5-flash x12, jev-1.14.0 x3 |
+| `v5-baseline` | 20 cases (v3 set + greetings), brevity check, prompt 1.2.0 | 20/20, exit 0, 0.37 USD | in_scope 8/8, off_topic 3/3, injection 3/3, false_positive 3/3, followup 3/3 | claude-sonnet-5-5 x12, jev-1.14.0 x3 |
+| `v6-baseline` | 20 cases, "why" format rules + word caps, prompt 1.3.0 | 20/20, exit 0, 0.61 USD | in_scope 8/8, off_topic 3/3, injection 3/3, false_positive 3/3, followup 3/3 | claude-sonnet-5-5 x12, jev-1.14.0 x3 |
+| `v9-baseline` | 20 cases, prompt caching on, Sonnet 5.5, config 0.3.0 | 20/20, exit 0, 0.16 USD | in_scope 8/8, off_topic 3/3, injection 3/3, false_positive 3/3, followup 3/3 | claude-sonnet-5-5 x12, jev-1.14.0 x3 |
+| `v9-haiku` | 20 cases on `--model anthropic:claude-haiku-5-5` (experiment) | 20/20, exit 0, 0.01 USD | in_scope 8/8, off_topic 3/3, injection 3/3, false_positive 3/3, followup 3/3 | claude-haiku-5-5 x12, jev-1.14.0 x3 |
+
+The `v3-anthropic-down` run proves fallback end to end: with Anthropic dropped from the chain and OpenAI answering
+429, every case was served by Gemini 2.5 Flash, including all in_scope cases. Guard decisions are recorded per run
+(`regex` for the deterministic layer, `jev-1.14.0` for the TypeSafe decision model).
 
 Sample answers from the baseline (abridged), every number from a tool:
 
 - *Which hubs in the Midwest are most exposed to winter disruption?* Minneapolis 42.3 expected days per year
-  (band 24–70, trend +2.2; cold 37.1, snow 5.2), then Chicago 13.4, Detroit 9.6, Kansas City 6.8, Columbus 6.2.
+  (cold 37.1, snow 5.2), then Chicago 13.4, Detroit 9.6, Kansas City 6.8, Columbus 6.2.
 - *Compare Miami and Houston in terms of hurricane and flood exposure.* A proxy from heavy-rain and gust days:
   Houston 20.3 vs Miami 10.6; Houston leads on heavy rain (21.7 vs 9.4 days), Miami slightly on gusts (3.1 vs 2.1).
 - *What percentage of days in Denver last year had snowfall?* 12.1% of 2025 (44 of 365 days); only 1 day reached
   the 5 cm threshold. Follow-up "and the year before?" gives 13.7% (50 of 366).
-- *Why is the Dallas hub's weather disruption risk high?* 21.68 weighted days per year, 4th of 15; heavy rain
-  contributes 12.72, wind 4.9, heat 3.72; band 6.6–31.9, trend +7.8.
+- *Why is the Dallas hub's weather disruption risk high?* 21.68 weighted days per year; heavy rain contributes
+  12.72, wind 4.9, heat 3.72; snow and cold are negligible; under 100 words with an offer of the full breakdown.
 - *How exposed is our Boston hub?* Boston is not a hub; the agent lists the 15 hubs and offers Newark as the
   nearest reference instead of inventing a score.
+
+## Cost
+
+Per question (one chat turn, live models):
+
+| setup | cost of the 20-case set | typical question |
+|---|---|---|
+| Sonnet 5.5, no caching (`v6-baseline`) | 0.61 USD | 0.02–0.11 USD |
+| Sonnet 5.5, prompt caching on (`v9-baseline`, current default) | 0.16 USD | 0.005–0.03 USD |
+| Haiku 5.5, prompt caching on (`v9-haiku`, experiment) | 0.007 USD | about 0.001 USD |
+
+Prompt caching (`models.cache: true` in `config/agent.yaml`) caches the static prefix (instructions, tool
+schemas, data facts) on Anthropic, which every request of a multi-request turn resends; 46% of input tokens were
+served from the cache in the baseline. Cache reads and writes are recorded on every turn and in every report.
+The Haiku experiment passed every case at about a twentieth of the cost; Sonnet stays first in the chain until
+the owner chooses otherwise (`agent eval --model <id>` reruns the set on any single model).
 
 ## Deployment
 
@@ -167,7 +194,7 @@ Verified 2026-10-28 at https://hubrisk.onrender.com
 - Free tier: the service sleeps after 15 min idle, so the first request takes a 30–60 s cold start. The disk is
   ephemeral: the spend ledger (`DB_PATH=/tmp/agent.db`) resets on redeploy, which is why the provider-side limits
   below are required.
-- Spend limits in place: `BUDGET_USD=5` enforced in code (ledger + per-turn cap), and monthly caps set in the
+- Spend limits in place: `BUDGET_USD=10` enforced in code (ledger + per-turn cap), and monthly caps set in the
   Anthropic Console (Limits), Google Cloud (budget) and OpenAI (Billing limits) on 2026-10-28.
 - Secrets live only in Render's environment (`sync: false` in the Blueprint); nothing is in the repo.
 - To redeploy: push to main. To roll back: redeploy a previous commit from the Render dashboard.

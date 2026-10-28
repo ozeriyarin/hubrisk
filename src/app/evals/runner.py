@@ -23,6 +23,9 @@ class RunResult(BaseModel):
     cost_usd: float
     latency_ms: int
     answer: str
+    input_tokens: int = 0
+    cache_read_tokens: int = 0
+    cache_write_tokens: int = 0
 
 
 class CaseResult(BaseModel):
@@ -62,6 +65,23 @@ class Report(BaseModel):
     @property
     def total_cost_usd(self) -> float:
         return round(sum(r.cost_usd for c in self.cases for r in c.runs), 6)
+
+    @computed_field
+    @property
+    def cache_read_tokens(self) -> int:
+        return sum(r.cache_read_tokens for c in self.cases for r in c.runs)
+
+    @computed_field
+    @property
+    def cache_write_tokens(self) -> int:
+        return sum(r.cache_write_tokens for c in self.cases for r in c.runs)
+
+    @computed_field
+    @property
+    def cache_share(self) -> float:
+        """Share of prompt input served from the cache (cache reads over cache reads plus uncached input)."""
+        total = self.cache_read_tokens + sum(r.input_tokens for c in self.cases for r in c.runs)
+        return round(self.cache_read_tokens / total, 3) if total else 0.0
 
     @computed_field
     @property
@@ -113,7 +133,8 @@ async def run_case(service: Service, case: EvalCase, max_turns: int) -> RunResul
     return RunResult(
         status=turn.status, passed=not reasons, reasons=reasons, served_by=turn.served_by, guardrail=turn.guardrail,
         failed_attempts=turn.failed_attempts, tools=turn.tools_used, cost_usd=cost + turn.cost_usd,
-        latency_ms=turn.latency_ms, answer=turn.answer,
+        latency_ms=turn.latency_ms, answer=turn.answer, input_tokens=turn.input_tokens,
+        cache_read_tokens=turn.cache_read_tokens, cache_write_tokens=turn.cache_write_tokens,
     )
 
 

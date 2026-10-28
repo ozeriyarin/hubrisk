@@ -103,6 +103,18 @@ def truncated(response: ModelResponse) -> bool:
     return response.finish_reason == "length"
 
 
+def cache_settings(cache: bool) -> dict | None:
+    """Anthropic prompt-cache settings for the agent; other vendors ignore the prefixed keys."""
+    if not cache:
+        return None
+    return {"anthropic_cache_instructions": True, "anthropic_cache_tool_definitions": True, "anthropic_cache_messages": True}
+
+
+def answer_chain(chain: list[str], down: list[str] | None = None, only: str | None = None) -> list[str]:
+    """The model ids to build: one model for an experiment, else the chain minus simulated outages."""
+    return [only] if only else without_vendors(chain, down)
+
+
 def without_vendors(names: list[str], down: list[str] | None) -> list[str]:
     """Chain entries minus the vendors in `down` (prefix match), to simulate an outage."""
     return [m for m in names if not any(m.startswith(d) for d in (down or []))]

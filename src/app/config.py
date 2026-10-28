@@ -20,6 +20,7 @@ class ModelsConfig(BaseModel):
     timeout_s: float = Field(gt=0)
     retry_attempts: int = Field(ge=1)
     retry_max_wait_s: float = Field(ge=0)
+    cache: bool = True  # Anthropic prompt caching of instructions, tool definitions and messages
 
 
 class LimitsConfig(BaseModel):

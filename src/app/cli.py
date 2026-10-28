@@ -34,7 +34,7 @@ from app.evals.cases import load_cases
 from app.evals.report import render_markdown
 from app.evals.runner import run_all
 from app.llm.budget import Budget
-from app.llm.models import build_chain, retrying_http_client, without_vendors
+from app.llm.models import answer_chain, build_chain, retrying_http_client
 from app.scoring.config import load_scoring_config
 from app.scoring.engine import Engine
 
@@ -45,6 +45,7 @@ TEST_FLAG = typer.Option(False, "--test", help="offline TestModel: no key, no sp
 QUESTION = typer.Argument(None)
 DOWN_OPT = typer.Option([], help="vendor prefix to drop from the chain, e.g. anthropic (outage simulation)")
 NOTE_OPT = typer.Option([], help="free-text note recorded in the report")
+MODEL_OPT = typer.Option(None, "--model", help="run the set on this single answer model (experiment), e.g. anthropic:claude-haiku-5-5")
 HUB_OPT = typer.Option([], "--hub", help="hub id to ingest (repeatable); default: every hub")
 CASES_OPT = typer.Option(None, help="case file; default evals/cases.yaml, or evals/smoke.yaml with --test")
 
@@ -61,7 +62,7 @@ class App:
     alerts: AlertService | None = None
 
 
-def compose(*, model_mode: str | None = None, down: list[str] | None = None) -> App:
+def compose(*, model_mode: str | None = None, down: list[str] | None = None, only: str | None = None) -> App:
     """Build everything from .env + config. `down` drops models from the chain to simulate a vendor outage."""
     load_dotenv()
     settings = Settings()
@@ -69,7 +70,7 @@ def compose(*, model_mode: str | None = None, down: list[str] | None = None) -> 
         settings.model_mode = model_mode
     config = load_agent_config()
     prices = load_prices()
-    chain = build_chain(without_vendors(config.models.chain, down), settings, config.models)
+    chain = build_chain(answer_chain(config.models.chain, down, only), settings, config.models)
     if settings.model_mode == "test":
         guard_model = offline_guard_model()
         guard_name = "test"
@@ -96,7 +97,7 @@ def compose(*, model_mode: str | None = None, down: list[str] | None = None) -> 
     deps = ToolContext(
         product_name=config.name, hubs=registry, store=store, nws=NWSClient(live_http, settings.nws_user_agent), engine=engine
     )
-    service = Service(build_agent(chain.model), Guard(guard_model), budget, config.limits, prices, deps)
+    service = Service(build_agent(chain.model, cache=config.models.cache), Guard(guard_model), budget, config.limits, prices, deps)
     alerts = AlertService(registry, deps.nws, AlertStore(settings.db_path), WebhookNotifier(settings.alert_webhook_url))
     return App(settings, config, service, budget, chain.names, guard_name, store, alerts)
 
@@ -187,12 +188,13 @@ def eval_cmd(
     tag: str = "latest",
     test: bool = TEST_FLAG,
     down: list[str] = DOWN_OPT,
+    model: str | None = MODEL_OPT,
     note: list[str] = NOTE_OPT,
 ) -> None:
     """Run evals/cases.yaml, write evals/results/<tag>.{json,md}, exit 0 pass / 1 fail / 2 flaky."""
-    app = compose(model_mode="test" if test else None, down=down)
+    app = compose(model_mode="test" if test else None, down=down, only=model)
     loaded = load_cases(cases or default_cases(test))
-    notes = list(note) + ([f"simulated outage: {', '.join(down)}"] if down else [])
+    notes = list(note) + ([f"simulated outage: {', '.join(down)}"] if down else []) + ([f"single model: {model}"] if model else [])
     report = asyncio.run(
         run_all(
             app.service, loaded, repeat=repeat, models=app.model_names, guard=app.guard_name,

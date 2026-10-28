@@ -23,7 +23,7 @@ services:
       - key: TYPESAFE_API_KEY
         sync: false
       - key: BUDGET_USD
-        value: "5"
+        value: "10"
       - key: ADMIN_TOKEN
         generateValue: true
       - key: DB_PATH

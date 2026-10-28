@@ -34,5 +34,7 @@ class Turn(BaseModel):
     model_requests: int = 0
     input_tokens: int = 0
     output_tokens: int = 0
+    cache_read_tokens: int = 0  # prompt-cache reads (Anthropic); the saving is visible, not claimed
+    cache_write_tokens: int = 0
     cost_usd: float = 0.0
     latency_ms: int = 0

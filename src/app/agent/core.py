@@ -25,7 +25,7 @@ from app.agent.tools import ToolContext, build_toolset
 from app.config import LimitsConfig, Price
 from app.decide.guard import Guard, check_input
 from app.llm.budget import Budget, BudgetExceeded, estimate_cost
-from app.llm.models import failed_attempts, served_by
+from app.llm.models import cache_settings, failed_attempts, served_by
 
 log = logging.getLogger(__name__)
 
@@ -51,7 +51,7 @@ def data_instructions(deps: ToolContext) -> str:
     ])
 
 
-def build_agent(model: Model) -> Agent[ToolContext, AnswerOut]:
+def build_agent(model: Model, *, cache: bool = True) -> Agent[ToolContext, AnswerOut]:
     agent: Agent[ToolContext, AnswerOut] = Agent(
         model,
         deps_type=ToolContext,
@@ -59,6 +59,7 @@ def build_agent(model: Model) -> Agent[ToolContext, AnswerOut]:
         instructions=prompts.INSTRUCTIONS,
         toolsets=[build_toolset()],
         retries=1,
+        model_settings=cache_settings(cache),
     )
 
     @agent.instructions
@@ -185,6 +186,8 @@ class Service:
             model_requests=usage.requests,
             input_tokens=usage.input_tokens,
             output_tokens=usage.output_tokens,
+            cache_read_tokens=usage.cache_read_tokens,
+            cache_write_tokens=usage.cache_write_tokens,
             cost_usd=cost,
             latency_ms=elapsed(),
         )

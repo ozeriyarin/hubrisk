@@ -31,13 +31,17 @@ Order is fixed: spec → code + tests → ruff → pytest → eval report (when 
 
 - **v6 header polish** (2026-10-28, spec `agent-os/specs/2026-10-28-v6-header-polish`): header shows
   "HubRisk agent" and the tagline instead of version and model chain; follow-up from live testing: "why" answer
-  format and word caps (prompt 1.3.0, baseline `v6-baseline`), sources collapsed into the details toggle.
+  format and word caps (prompt 1.3.0, baseline `v6-baseline`); round 2: rotating example placeholder,
+  informative refusal, limitations in the toggle with sources visible, footer disclaimer, line icons.
 
 - **v7 alerts** (2026-10-28, spec `agent-os/specs/2026-10-28-v7-alerts`): live risk level per hub from NWS,
   scheduled check + webhook on change, `agent alerts-check`, `/api/alerts`, GitHub Actions cron trigger.
 
 - **v8 voice** (2026-10-28, spec `agent-os/specs/2026-10-28-v8-voice`): browser speech-to-text mic button and
   spoken answers (speaker toggle), Web Speech API only.
+
+- **v9 cost** (2026-10-28, spec `agent-os/specs/2026-10-28-v9-cost`): Anthropic prompt caching of the static
+  prefix, cache tokens in turns and reports, `agent eval --model` experiments, measured baseline and Haiku run.
 
 ## Phase 1: MVP (must ship)
 

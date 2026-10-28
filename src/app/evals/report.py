@@ -22,6 +22,7 @@ def render_markdown(report: Report) -> str:
     for cat, d in report.by_category.items():
         lines.append(f"| {cat} | {d['passed']}/{d['cases']} | {d['runs_passed']}/{d['runs']} |")
     lines += ["", "Served by: " + ", ".join(f"{k} ×{v}" for k, v in sorted(report.served_by.items())), ""]
+    lines += [f"cache: read {report.cache_read_tokens} tokens, write {report.cache_write_tokens}, {report.cache_share:.0%} of input served from cache", ""]
     failures = [c for c in report.cases if not c.passed]
     if failures:
         lines += ["## Failures and flaky cases", ""]
