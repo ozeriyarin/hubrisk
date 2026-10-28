@@ -77,7 +77,9 @@ every answer aloud. Only the answer is spoken, never sources or limitations.
 A deterministic **live risk level** per hub (none / watch / warning) comes from NWS active alerts (severity
 Severe or Extreme → warning, otherwise watch, hazard matched by event name) plus the 7-day forecast (≥ 70%
 chance of snow, storms or heavy rain adds a watch). It is reported beside the historical score, never blended
-into it. A scheduled check stores the level and posts a JSON webhook to `ALERT_WEBHOOK_URL` when a hub's level
+into it. The alert tracks the live NWS level because the historical score is frozen between ingests and only
+changes on a re-run of `agent ingest`, so a change-triggered alert on the score itself would never fire. A
+scheduled check stores the level and posts a JSON webhook to `ALERT_WEBHOOK_URL` when a hub's level
 changes:
 
 ```bash
