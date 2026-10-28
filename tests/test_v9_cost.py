@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 
 import pytest
 from typer.testing import CliRunner
@@ -51,7 +52,9 @@ def test_criterion_3_single_model_switch():
     chain = ["anthropic:a", "openai:b", "google-gla:c"]
     assert answer_chain(chain) == chain and answer_chain(chain, ["openai"]) == ["anthropic:a", "google-gla:c"]
     assert answer_chain(chain, ["openai"], "anthropic:claude-haiku-5-5") == ["anthropic:claude-haiku-5-5"]
-    assert "--model" in CliRunner().invoke(cli_module.cli, ["eval", "--help"]).output
+    # Typer forces Rich colour under GITHUB_ACTIONS and Rich splits "--model" into styled pieces: strip ANSI first.
+    plain = re.sub(r"\x1b\[[0-9;]*m", "", CliRunner().invoke(cli_module.cli, ["eval", "--help"]).output)
+    assert "--model" in plain
 
 
 def load(tag: str) -> Report:
