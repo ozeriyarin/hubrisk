@@ -85,10 +85,9 @@ def test_criterion_7_meta_layout_and_no_slash_commands(service, budget):
     app = create_app(service, SessionStore(max_turns=5, ttl_s=60), budget, model_names=["fake"], guard_name="g")
     page = TestClient(app).get("/").text
     assert "createElement('details')" in page and "'Sources: '" in page and "'Limitations: '" in page
-    visible = page.index("'Limitations: '")
     toggle = page.index("createElement('details')")
-    assert visible < toggle, "limitations must be rendered before (outside) the details toggle"
-    assert page.index("'Sources: '") > toggle, "sources collapse into the toggle (v6 follow-up)"
+    assert page.index("'Sources: '") < toggle, "sources visible by default (v6 round 2)"
+    assert page.index("'Limitations: '") > toggle, "limitations inside the toggle (v6 round 2)"
     assert "startsWith('/')" not in page and "slash" not in page.lower()
 
 

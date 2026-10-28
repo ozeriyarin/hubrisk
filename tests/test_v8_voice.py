@@ -36,7 +36,7 @@ def test_criterion_3_no_external_script_and_prior_features_intact(service, budge
     page = TestClient(app).get("/").text
     assert "<script src=" not in page and "startsWith('/')" not in page and "slash" not in page.lower()
     assert "HubRisk agent" in page and 'rel="icon"' in page and "createElement('details')" in page
-    assert "'Limitations: '" in page and "'Sources: '" in page
+    assert "'Limitations: '" in page and "'Sources: '" in page and "limits and run details" in page
 
 
 def test_criterion_4_docs_and_roadmap():

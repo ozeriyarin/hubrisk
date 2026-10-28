@@ -71,4 +71,59 @@ def test_criterion_5_sources_collapsed(service, budget):
     app = create_app(service, SessionStore(max_turns=5, ttl_s=60), budget, model_names=["fake"], guard_name="g")
     page = TestClient(app).get("/").text
     toggle = page.index("createElement('details')")
-    assert page.index("'Sources: '") > toggle and page.index("'Limitations: '") < toggle
+    assert page.index("'Sources: '") < toggle and page.index("'Limitations: '") > toggle  # round 2 layout
+
+
+def test_criterion_6_placeholder_rotates_examples():
+    page = (ROOT / "src" / "app" / "api" / "static" / "index.html").read_text(encoding="utf-8")
+    for q in ("Which hubs in the Midwest are most exposed to winter disruption?", "Compare Miami and Houston",
+              "What percentage of days in Denver last year had snowfall?", "Why is the Dallas hub"):
+        assert q in page
+    assert "q.placeholder = 'e.g. ' + EXAMPLES[" in page and "Math.random()" in page
+
+
+def test_criterion_7_refusal_names_the_scope():
+    from app.agent import prompts
+
+    text = prompts.REFUSAL_OFF_TOPIC
+    for phrase in ("weather disruption risk", "distribution hubs", "ranking and comparing hubs", "statistics per hub and year", "alerts and forecasts", "Try:"):
+        assert phrase in text, phrase
+    assert "Which hubs in the Midwest" in text
+
+
+def test_criterion_8_limitations_in_toggle_sources_visible(service, budget):
+    app = create_app(service, SessionStore(max_turns=5, ttl_s=60), budget, model_names=["fake"], guard_name="g")
+    page = TestClient(app).get("/").text
+    toggle = page.index("createElement('details')")
+    assert page.index("'Sources: '") < toggle and page.index("'Limitations: '") > toggle
+    assert "summary.textContent = 'limits and run details'" in page
+
+
+def test_criterion_9_footer_disclaimer():
+    page = (ROOT / "src" / "app" / "api" / "static" / "index.html").read_text(encoding="utf-8")
+    assert re.search(r'<p id="footer">[^<]*estimates from public weather data[^<]*assumptions[^<]*verify before investment decisions\.</p>', page)
+
+
+def test_criterion_10_line_icons():
+    page = (ROOT / "src" / "app" / "api" / "static" / "index.html").read_text(encoding="utf-8")
+    assert "&#127908;" not in page and "&#128264;" not in page
+    mic = re.search(r'<button id="mic"[^>]*>(<svg[^>]*>.*?</svg>)</button>', page, re.DOTALL).group(1)
+    spk = re.search(r'<button id="speak"[^>]*>(<svg[^>]*>.*?</svg>)</button>', page, re.DOTALL).group(1)
+    for svg in (mic, spk):
+        assert 'width="18" height="18"' in svg and 'stroke="currentColor" stroke-width="2"' in svg and 'fill="none"' in svg
+
+
+def test_criterion_11_readme_reports_every_eval():
+
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    results = ROOT / "evals" / "results"
+    for path in sorted(results.glob("v*.json")):
+        assert f"`{path.stem}`" in readme, f"README evals section lacks {path.stem}"
+    assert "proves" in readme and "fallback" in readme and "Served by" in readme
+
+
+def test_criterion_12_no_sticky_header_no_theme_toggle():
+    page = (ROOT / "src" / "app" / "api" / "static" / "index.html").read_text(encoding="utf-8")
+    header_css = re.search(r"\n  header \{[^}]*\}", page).group(0)
+    assert "sticky" not in header_css and "fixed" not in header_css  # the input bar may stick; the header must not
+    assert "theme" not in page.lower() and "prefers-color-scheme" in page
