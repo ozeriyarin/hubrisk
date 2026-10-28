@@ -1,0 +1,9 @@
+{
+  "source": "open-meteo archive (ERA5 reanalysis), daily, https://archive-api.open-meteo.com/v1/archive",
+  "fetched_at": "2026-10-28T09:28:56.217673Z",
+  "start": "2016-01-01",
+  "end": "2025-12-31",
+  "hubs_version": "1.0.0",
+  "hubs": 15,
+  "rows": 54795
+}

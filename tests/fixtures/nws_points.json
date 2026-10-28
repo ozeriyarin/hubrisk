@@ -1,0 +1,11 @@
+{
+ "type": "Feature",
+ "properties": {
+  "gridId": "BOU",
+  "gridX": 63,
+  "gridY": 62,
+  "forecast": "https://api.weather.gov/gridpoints/BOU/63,62/forecast",
+  "forecastHourly": "https://api.weather.gov/gridpoints/BOU/63,62/forecast/hourly",
+  "timeZone": "America/Denver"
+ }
+}

@@ -14,6 +14,9 @@ from pydantic_ai.toolsets import FunctionToolset
 
 from app import __version__
 from app.agent.prompts import SCOPE_DESCRIPTION
+from app.data.hubs import HubRegistry
+from app.data.nws import NWSClient
+from app.data.store import Store
 
 
 @dataclass
@@ -21,6 +24,9 @@ class ToolContext:
     """Everything tools need (DB handles, config). Built once at startup, injected per run as `deps`."""
 
     product_name: str
+    hubs: HubRegistry | None = None
+    store: Store | None = None  # None when no snapshot is present; historical tools then degrade
+    nws: NWSClient | None = None
 
 
 class About(BaseModel):

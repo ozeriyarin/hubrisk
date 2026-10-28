@@ -1,0 +1,20 @@
+# Distribution hubs. Regions are the four US Census regions so "Midwest hubs" is a filter over data, not a model
+# guess. Coordinates are the metro centre used for the Open-Meteo point history; county_fips is kept for an
+# optional FEMA National Risk Index signal.
+version: "1.0.0"
+hubs:
+  - {id: chicago,      name: Chicago,      state: IL, region: Midwest,   lat: 41.8781, lon: -87.6298,  county_fips: "17031", timezone: America/Chicago}
+  - {id: minneapolis,  name: Minneapolis,  state: MN, region: Midwest,   lat: 44.9778, lon: -93.2650,  county_fips: "27053", timezone: America/Chicago}
+  - {id: detroit,      name: Detroit,      state: MI, region: Midwest,   lat: 42.3314, lon: -83.0458,  county_fips: "26163", timezone: America/Detroit}
+  - {id: columbus,     name: Columbus,     state: OH, region: Midwest,   lat: 39.9612, lon: -82.9988,  county_fips: "39049", timezone: America/New_York}
+  - {id: kansas-city,  name: Kansas City,  state: MO, region: Midwest,   lat: 39.0997, lon: -94.5786,  county_fips: "29095", timezone: America/Chicago}
+  - {id: dallas,       name: Dallas,       state: TX, region: South,     lat: 32.7767, lon: -96.7970,  county_fips: "48113", timezone: America/Chicago}
+  - {id: houston,      name: Houston,      state: TX, region: South,     lat: 29.7604, lon: -95.3698,  county_fips: "48201", timezone: America/Chicago}
+  - {id: miami,        name: Miami,        state: FL, region: South,     lat: 25.7617, lon: -80.1918,  county_fips: "12086", timezone: America/New_York}
+  - {id: atlanta,      name: Atlanta,      state: GA, region: South,     lat: 33.7490, lon: -84.3880,  county_fips: "13121", timezone: America/New_York}
+  - {id: memphis,      name: Memphis,      state: TN, region: South,     lat: 35.1495, lon: -90.0490,  county_fips: "47157", timezone: America/Chicago}
+  - {id: denver,       name: Denver,       state: CO, region: West,      lat: 39.7392, lon: -104.9903, county_fips: "08031", timezone: America/Denver}
+  - {id: phoenix,      name: Phoenix,      state: AZ, region: West,      lat: 33.4484, lon: -112.0740, county_fips: "04013", timezone: America/Phoenix}
+  - {id: los-angeles,  name: Los Angeles,  state: CA, region: West,      lat: 34.0522, lon: -118.2437, county_fips: "06037", timezone: America/Los_Angeles}
+  - {id: seattle,      name: Seattle,      state: WA, region: West,      lat: 47.6062, lon: -122.3321, county_fips: "53033", timezone: America/Los_Angeles}
+  - {id: newark,       name: Newark,       state: NJ, region: Northeast, lat: 40.7357, lon: -74.1724,  county_fips: "34013", timezone: America/New_York}

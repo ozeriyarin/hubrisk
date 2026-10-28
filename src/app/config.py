@@ -75,6 +75,8 @@ class Settings(BaseSettings):
     admin_token: str | None = None
     model_mode: str = "live"  # "test" answers every call offline with TestModel
     port: int = 8000
+    nws_user_agent: str = "hubrisk/0.1 (github.com/ozeriyarin/hubrisk)"  # NWS requires an identifying UA
+    snapshot_dir: Path = Path("data/snapshots")
 
     def key_for(self, model_name: str) -> str | None:
         """The vendor key a Pydantic AI model string needs, or None when it is not set."""

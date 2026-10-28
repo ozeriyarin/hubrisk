@@ -1,0 +1,20 @@
+{
+ "type": "FeatureCollection",
+ "title": "Current watches, warnings, and advisories for 39.7392 -104.9903",
+ "features": [
+  {
+   "id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.sample",
+   "type": "Feature",
+   "properties": {
+    "event": "Winter Storm Warning",
+    "severity": "Severe",
+    "urgency": "Expected",
+    "certainty": "Likely",
+    "headline": "Winter Storm Warning issued January 10 at 2:00PM MST until January 11 at 12:00PM MST by NWS Denver CO",
+    "onset": "2026-01-10T18:00:00-07:00",
+    "ends": "2026-01-11T12:00:00-07:00",
+    "areaDesc": "Denver"
+   }
+  }
+ ]
+}

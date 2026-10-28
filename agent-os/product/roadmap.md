@@ -9,12 +9,14 @@ Order is fixed: spec → code + tests → ruff → pytest → eval report (when 
   cross-vendor fallback, guard (Jev → Haiku, keyword double offline), budget ledger, FastAPI API + chat page,
   sessions, rate limits, eval runner, 77 offline tests incl. 20 criterion tests, CI, Render Blueprint.
 
+- **v1 hubs and data** (2026-10-28, spec `agent-os/specs/2026-10-28-v1-hubs-and-data`): 15-hub registry,
+  Open-Meteo 2016–2025 daily history committed as Parquet (54,795 rows), DuckDB store, NWS alerts/forecast client
+  with cache and degradation, `agent ingest`, `/health` data coverage, 12 criterion tests.
+
 ## Phase 1: MVP (must ship)
 
 1. ~~v0 platform~~ shipped.
-2. **v1 hubs and data** — hub registry (`config/hubs.yaml`: 12–15 hubs, lat/lon, region, county FIPS), Open-Meteo
-   archive ingest 2016–2025 into Parquet committed to the repo, DuckDB query layer, NOAA NWS client (active alerts,
-   7-day forecast) with offline fakes.
+2. ~~v1 hubs and data~~ shipped.
 3. **v2 disruption KPI** — scoring engine: per-hazard disruption days/year from thresholds, uncertainty band, 5-year
    trend, weighted overall score from versioned YAML; tools: rank hubs (filter by region/hazard), compare hubs,
    hub stats (e.g. % snow days in a year), explain hub score, current conditions.

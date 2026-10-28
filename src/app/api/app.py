@@ -15,6 +15,7 @@ from app.agent.core import Service
 from app.agent.schema import Turn
 from app.api.ratelimit import RateLimiter
 from app.api.sessions import SessionStore
+from app.data.store import DataSummary
 from app.llm.budget import Budget, Stats
 
 log = logging.getLogger(__name__)
@@ -36,6 +37,7 @@ class Health(BaseModel):
     version: str
     models: list[str]
     guard: str
+    data: DataSummary | None = None
 
 
 def client_ip(request: Request) -> str:
@@ -54,7 +56,7 @@ def create_app(
     model_names: list[str],
     guard_name: str,
     limiter: RateLimiter | None = None,
-    admin_token: str | None = None,
+    admin_token: str | None = None, data: DataSummary | None = None,
 ) -> FastAPI:
     app = FastAPI(title="hubrisk", version=__version__, docs_url="/api/docs", openapi_url="/api/openapi.json", redoc_url=None)
 
@@ -72,7 +74,7 @@ def create_app(
 
     @app.get("/health", response_model=Health)
     async def health() -> Health:
-        return Health(status="ok", version=__version__, models=model_names, guard=guard_name)
+        return Health(status="ok", version=__version__, models=model_names, guard=guard_name, data=data)
 
     @app.post("/api/chat", response_model=ChatResponse, responses={429: {"description": "Rate limit reached"}})
     async def chat(req: ChatRequest, request: Request) -> ChatResponse | JSONResponse:

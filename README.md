@@ -34,9 +34,24 @@ uv run ruff check src tests
 uv run pytest -q
 ```
 
+## Data
+
+- **Hubs:** `config/hubs.yaml`, 15 distribution hubs with coordinates, US Census region, county FIPS and timezone.
+- **History:** `data/snapshots/daily.parquet`, daily max/min temperature, precipitation, snowfall and wind-gust
+  maximum per hub for 2016-01-01..2025-12-31 from the Open-Meteo archive (ERA5 reanalysis, point data at the hub
+  coordinate). Committed to the repo, so a deploy needs no network and no key. `manifest.json` records when it
+  was fetched. Refresh with:
+
+```bash
+uv run agent ingest
+```
+
+- **Live:** NOAA NWS active alerts and 7-day forecast per hub, fetched on demand with a 10-minute cache. NWS
+  requires an identifying `User-Agent`; set `NWS_USER_AGENT` to include a contact.
+
 ## API
 
-- `GET /health` — version, model chain, guard.
+- `GET /health` — version, model chain, guard, and `data` (hubs, date range, rows) when the snapshot is loaded.
 - `POST /api/chat` `{"message": "...", "session_id": "optional"}` → the answer plus `status`, `sources`,
   `limitations`, `served_by`, `failed_attempts`, `tools_used`, cost and latency.
 - `DELETE /api/sessions/{id}` — forget a conversation.

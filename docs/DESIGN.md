@@ -37,9 +37,19 @@ browser chat page ──HTTP──▶ FastAPI (app/api)
 - **Evals are the quality gate:** `evals/cases.yaml` by category, `agent eval` writes `evals/results/<tag>`,
   exit 0 pass / 1 fail / 2 flaky, `--down <vendor>` proves cross-vendor fallback end to end.
 
-Domain layers (v1–v3): `app/data` (hub registry, Open-Meteo history ingest, NWS live client, DuckDB store),
-`app/scoring` (disruption days per year per hazard, uncertainty band, trend, weighted score), domain tools and
-prompts in `app/agent`.
+## Data layer (`app/data`)
+
+- `hubs.py`: `HubRegistry` over `config/hubs.yaml`. Region filters are lookups, never model guesses.
+- `openmeteo.py`: one archive request per hub for five daily variables; the response's `daily_units` must match
+  the expected metric units or the client raises `SourceError`.
+- `snapshot.py` / `store.py`: DuckDB writes the Parquet snapshot and reads it back through a `daily` view; every
+  query runs on a per-call cursor. `Store.years` counts a year complete at 360 or more rows.
+- `nws.py`: alerts via `/alerts/active?point=`, forecast via `/points` then the forecast URL; User-Agent on every
+  request; per-hub cache (10 min, 1 min for failures); any failure degrades to `available=False` with a reason.
+- `ingest.py`: sequential per-hub fetch with a pause and long-backoff retries (the archive answers 429 to bursts),
+  one atomic snapshot write.
+
+Still to come: `app/scoring` (v2) and the domain tools and prompts in `app/agent` (v3).
 
 ## Repository structure
 
@@ -66,7 +76,7 @@ render.yaml    Render Blueprint (python runtime, uv sync --frozen --no-dev, /hea
 
 ## Data storage choice
 
-- **History: DuckDB over Parquet snapshots committed to the repo** (v1). Open-Meteo daily history for all hubs,
+- **History: DuckDB over Parquet snapshots committed to the repo.** Open-Meteo daily history for all hubs,
   2016–2025, is ingested once locally and committed as Parquet. Rationale: the dataset is small (15 hubs × ~3,650
   days), read-only at runtime, and queried analytically (thresholds, group-by year); DuckDB runs in-process with
   no server and reads Parquet directly; a deploy needs no re-ingest, so Render's ephemeral disk is irrelevant and
