@@ -1,0 +1,22 @@
+# Agent OS standards index. /inject-standards reads the descriptions to pick what applies to a task.
+root:
+  ai-calls:
+    description: Every model call goes through Pydantic AI; retrying transport, SDK retries off, FallbackModel across vendors; typed output always; prompt changes ship with an eval report
+  budget:
+    description: Monthly cap enforced by the SQLite ledger before every paid call (reserve/settle/release), per-turn UsageLimits, provider-side limits mirrored
+  data-sources:
+    description: Hub registry in config/hubs.yaml; Open-Meteo history ingested once into committed Parquet, queried via DuckDB; NWS live alerts and forecast; clients take a transport and are faked with MockTransport
+  deployment:
+    description: Render Blueprint, python runtime, uv sync --frozen, /health probe, secrets as sync:false env vars, ephemeral disk acknowledged in README
+  evals:
+    description: evals/cases.yaml categories in_scope/off_topic/injection/false_positive/followup; agent eval writes evals/results/<tag>; exit 0/1/2 gate; outage simulation with --down
+  guardrails:
+    description: Regex layer first, then Jev decision model with Haiku fallback; policy in code; refusals are fixed strings; user text is data
+  python-style:
+    description: Python 3.12, src layout, one package per concern, Pydantic at every boundary, ruff, one-line comments only when intent is not obvious
+  scoring:
+    description: Deterministic KPI of disruption days per year per hub and hazard from versioned thresholds and weights; uncertainty band and trend always attached; the LLM never produces a number
+  secrets-and-config:
+    description: Secrets only via Settings from env, validated at startup, never logged; non-secret config in config/*.yaml, versioned; a missing key removes a model
+  testing:
+    description: pytest offline only; FunctionModel/TestModel fakes, MockTransport for HTTP; every spec criterion has test_criterion_<n>_<slug>; ruff + pytest green before commit
