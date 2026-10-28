@@ -22,6 +22,8 @@ browser chat page ──HTTP──▶ FastAPI (app/api)
                            Turn (status, answer, sources, limitations, served_by, failed_attempts, cost, latency)
 ```
 
+- **Browser chat page.** Speech-to-text and spoken answers (v8) run in the browser via the Web Speech API and
+  never reach the API; the server only ever sees text.
 - **The LLM never produces a number.** Tools return typed Pydantic models; the model picks tools and explains.
   `AnswerOut` is enforced by Pydantic AI; a reply that fails validation is retried once, then the turn fails loudly.
 - **Three retry layers, one job each:** the httpx transport retries 429/5xx/network per model with Retry-After;
@@ -36,6 +38,9 @@ browser chat page ──HTTP──▶ FastAPI (app/api)
 - **Spend is bounded twice:** the ledger enforces `BUDGET_USD` per month before every paid call (reserve →
   settle / release), plus `UsageLimits` per turn and per-IP / daily request limits. Provider consoles carry the
   same cap as the hard backstop.
+- **Prompt caching (v9).** The static prefix (instructions, tool definitions, the per-process data facts) is
+  cached on Anthropic and reused by every request of a turn and by later questions; the 20-case eval set went
+  from 0.61 to 0.16 USD with the same answers, 46% of input tokens served from cache.
 - **Evals are the quality gate:** `evals/cases.yaml` by category, `agent eval` writes `evals/results/<tag>`,
   exit 0 pass / 1 fail / 2 flaky, `--down <vendor>` proves cross-vendor fallback end to end.
 
@@ -132,3 +137,16 @@ historical KPI is untouched: live risk is a separate signal, as the scoring stan
 - Reanalysis data is a point at the hub coordinate, not the facility footprint.
 - Ten years is short for rare hazards (hurricanes); the year-to-year band is the honest uncertainty we can show.
 - Single process, single region, no auth: scoped for a live demo and a small analyst team.
+
+### Security and privacy
+
+- The chat endpoint has no authentication: the per-IP and daily rate limits and the monthly budget cap bound the
+  damage; production would put a login or a per-analyst API key in front of it.
+- The outgoing alert webhook is unsigned; production would add an HMAC signature header over the body.
+- NWS alert text enters the model context through `current_conditions`. It is a third-party data source, low risk,
+  but it is the remaining injection surface.
+- `/api/alerts` is public by design and carries nothing sensitive.
+
+Already true today: no chat content is logged or stored (logs carry a truncated session id, status and guardrail;
+the ledger stores model, tokens, cost and latency), sessions are in memory with a one-hour TTL, the admin token is
+compared in constant time, and with no CORS middleware only the same-origin page can call the API from a browser.
