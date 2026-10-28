@@ -53,8 +53,11 @@
     // Operator detail (version, models, guard) stays on /health; the header only flags an unhealthy service.
     document.getElementById('status').textContent = h.status === 'ok' ? '' : 'status: ' + h.status;
   }).catch(() => document.getElementById('status').textContent = 'offline');
-  // Instant, not smooth: smooth scrolling is ignored by some mobile browsers, so the page never moved.
-  function scrollToEnd() { requestAnimationFrame(() => { const el = document.scrollingElement || document.documentElement; el.scrollTop = el.scrollHeight; }); }
+  // Instant, synchronous, with a short retry: smooth scrolling and animation frames are unreliable on phones.
+  function scrollToEnd() {
+    const go = () => { const el = document.scrollingElement || document.documentElement; el.scrollTop = el.scrollHeight; };
+    go(); setTimeout(go, 60); setTimeout(go, 300);
+  }
   function add(cls, text, meta) {
     const d = document.createElement('div'); d.className = 'msg ' + cls; d.textContent = text;
     if (meta) { const m = document.createElement('div'); m.className = 'meta'; m.textContent = meta; d.appendChild(m); }
