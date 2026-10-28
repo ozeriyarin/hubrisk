@@ -6,7 +6,16 @@ import logging
 import time
 from dataclasses import dataclass, field
 
-from pydantic_ai import Agent, ModelAPIError, ModelMessage, ModelResponse, ToolCallPart, UsageLimits
+import httpx2
+from pydantic_ai import (
+    Agent,
+    ModelAPIError,
+    ModelMessage,
+    ModelResponse,
+    RunContext,
+    ToolCallPart,
+    UsageLimits,
+)
 from pydantic_ai.exceptions import FallbackExceptionGroup, UsageLimitExceeded
 from pydantic_ai.models import Model
 
@@ -21,8 +30,29 @@ from app.llm.models import failed_attempts, served_by
 log = logging.getLogger(__name__)
 
 
+def data_instructions(deps: ToolContext) -> str:
+    """Facts injected per run so the prompt can never be stale relative to the snapshot and the config."""
+    if deps.engine is None:
+        return (
+            "Historical data is NOT loaded: rank_hubs, compare_hubs, hub_score and hub_year_stats return Unavailable. "
+            "Only about, list_hubs and current_conditions work; say so when asked for scores or statistics."
+        )
+    cfg, manifest = deps.engine.config, deps.engine.store.manifest
+    last_complete = manifest.end.year if (manifest.end.month, manifest.end.day) == (12, 31) else manifest.end.year - 1
+    by_region: dict[str, list[str]] = {}
+    for hub in deps.hubs.all if deps.hubs else []:
+        by_region.setdefault(hub.region, []).append(hub.id)
+    return "\n".join([
+        f"Data: daily weather history {manifest.start} to {manifest.end} (data_through {manifest.end}); "
+        f"'last year' means {last_complete}, the last complete year. Scoring version {cfg.version}.",
+        "Hubs by region: " + "; ".join(f"{r}: {', '.join(ids)}" for r, ids in sorted(by_region.items())) + ".",
+        "Ranking scopes: " + ", ".join(cfg.scopes()) + ".",
+        "Hazard rules: " + "; ".join(f"{n} = {h.rule} (weight {h.weight:g})" for n, h in cfg.hazards.items()) + ".",
+    ])
+
+
 def build_agent(model: Model) -> Agent[ToolContext, AnswerOut]:
-    return Agent(
+    agent: Agent[ToolContext, AnswerOut] = Agent(
         model,
         deps_type=ToolContext,
         output_type=AnswerOut,
@@ -30,6 +60,12 @@ def build_agent(model: Model) -> Agent[ToolContext, AnswerOut]:
         toolsets=[build_toolset()],
         retries=1,
     )
+
+    @agent.instructions
+    def data_facts(ctx: RunContext[ToolContext]) -> str:
+        return data_instructions(ctx.deps)
+
+    return agent
 
 
 @dataclass
@@ -39,6 +75,7 @@ class Conversation:
     max_turns: int
     history: list[ModelMessage] = field(default_factory=list)
     turns: int = 0
+    last_question: str | None = None  # guard context for follow-ups such as 'and the year before?'
 
     def extend(self, new_messages: list[ModelMessage]) -> None:
         self.history.extend(new_messages)
@@ -51,6 +88,7 @@ class Conversation:
     def reset(self) -> None:
         self.history.clear()
         self.turns = 0
+        self.last_question = None
 
 
 def tools_used(messages: list[ModelMessage]) -> list[str]:
@@ -92,7 +130,7 @@ class Service:
 
         cost = 0.0
         try:
-            verdict = await self.guard.screen(message)
+            verdict = await self.guard.screen(message, previous=conversation.last_question)
             if verdict.label != "in_scope":
                 self.budget.release(rid, failed=False)
                 status = "refused_injection" if verdict.label == "injection" else "refused_off_topic"
@@ -111,7 +149,7 @@ class Service:
             self.budget.release(rid, failed=True)
             log.warning("turn stopped by usage limit: %s", e)
             return Turn(status="cannot_answer", answer="I had to stop before finishing this answer. Try a narrower question.", latency_ms=elapsed())
-        except (ModelAPIError, FallbackExceptionGroup) as e:
+        except (ModelAPIError, FallbackExceptionGroup, httpx2.HTTPError) as e:  # transport errors after retries
             self.budget.release(rid, failed=True)
             log.error("all models failed: %r", e)
             return Turn(status="unavailable", answer=prompts.UNAVAILABLE, latency_ms=elapsed())
@@ -130,6 +168,7 @@ class Service:
         )
         new_messages = result.new_messages()
         conversation.extend(new_messages)
+        conversation.last_question = message
         out = result.output
         return Turn(
             status=out.status,

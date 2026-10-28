@@ -60,6 +60,7 @@
       if (j.tools_used && j.tools_used.length) bits.push('tools: ' + j.tools_used.join(', '));
       if (j.cost_usd) bits.push(`$${j.cost_usd.toFixed(4)}`);
       bits.push(`${j.latency_ms} ms`);
+      if (j.sources && j.sources.length) bits.push('sources: ' + j.sources.join('; '));
       if (j.limitations && j.limitations.length) bits.push('limits: ' + j.limitations.join('; '));
       const m = document.createElement('div'); m.className = 'meta'; m.textContent = bits.join(' · '); pending.appendChild(m);
     } catch (err) { pending.textContent = 'Request failed: ' + err; pending.classList.add('refused'); }

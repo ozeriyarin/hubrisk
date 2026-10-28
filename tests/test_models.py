@@ -101,3 +101,15 @@ def test_build_chain_without_any_key_fails_loudly():
 def test_build_chain_test_mode_uses_test_model():
     chain = build_chain(CFG.chain, Settings(_env_file=None, model_mode="test"), CFG)
     assert chain.names == ["test"]
+
+
+async def test_transport_http_error_after_retries_falls_over_to_next_model():
+    """A 429 that survives the transport's retries is an httpx2.HTTPStatusError, not a ModelAPIError."""
+    request = httpx2.Request("POST", "https://api.example.test/v1/chat")
+    err = httpx2.HTTPStatusError("429", request=request, response=httpx2.Response(429, request=request))
+    model = FallbackModel(
+        failing_model(err, model_name="primary"), text_model("hello", model_name="backup"),
+        fallback_on=[ModelAPIError, httpx2.HTTPError, truncated],
+    )
+    result = await Agent(model).run("hi")
+    assert result.output == "hello" and served_by(result.response) == "backup"

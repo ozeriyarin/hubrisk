@@ -17,13 +17,16 @@ Order is fixed: spec → code + tests → ruff → pytest → eval report (when 
   weights, pure scoring engine (days/year per hazard, band, trend, weighted overall), six deterministic tools that
   never raise, 12 criterion tests.
 
+- **v3 agent** (2026-10-28, spec `agent-os/specs/2026-10-28-v3-agent`): domain prompts with dynamic data facts,
+  guard context for follow-ups, live eval set (18 cases, 5 categories) + offline smoke set, baseline report 18/18,
+  Anthropic-down fallback report, transport HTTP errors now fall over instead of crashing.
+
 ## Phase 1: MVP (must ship)
 
 1. ~~v0 platform~~ shipped.
 2. ~~v1 hubs and data~~ shipped.
 3. ~~v2 disruption KPI~~ shipped.
-4. **v3 agent** — prompts, tools wired, `AnswerOut` schema enforced, eval cases per category (in_scope, off_topic,
-   injection, false_positive, followup) covering the four sample questions, first committed eval report.
+4. ~~v3 agent~~ shipped.
 5. **v4 deploy** — Render live, `/health` and chat verified from the public URL, provider-side spend limits set,
    README (run instructions, assumptions, uncertainty, scoping, live URL + verification date), `docs/DESIGN.md`
    (architecture, repository structure, data storage choice), session transcript exported to `docs/ai-session/`.

@@ -53,6 +53,7 @@ class Report(BaseModel):
     models: list[str]
     guard: str
     config_version: str
+    prompt_version: str = "n/a"
     repeat: int
     cases: list[CaseResult]
     notes: list[str] = Field(default_factory=list)
@@ -114,7 +115,7 @@ async def run_case(service: Service, case: EvalCase, max_turns: int) -> RunResul
 
 async def run_all(
     service: Service, cases: list[EvalCase], *, repeat: int, models: list[str], guard: str, config_version: str,
-    max_turns: int, notes: list[str] | None = None,
+    max_turns: int, notes: list[str] | None = None, prompt_version: str = "n/a",
 ) -> Report:
     results: list[CaseResult] = []
     for case in cases:
@@ -122,5 +123,5 @@ async def run_all(
         results.append(CaseResult(id=case.id, category=case.category, question=case.question, expect=list(case.expect), runs=runs))
     return Report(
         started_at=datetime.now(UTC).isoformat(timespec="seconds"), models=models, guard=guard,
-        config_version=config_version, repeat=repeat, cases=results, notes=notes or [],
+        config_version=config_version, prompt_version=prompt_version, repeat=repeat, cases=results, notes=notes or [],
     )

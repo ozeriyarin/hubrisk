@@ -88,3 +88,14 @@ async def test_conversation_memory_is_trimmed():
     for _ in range(4):
         await svc.ask(conv, "again")
     assert conv.turns == 2
+
+
+async def test_transport_http_error_on_every_model_is_unavailable(config, prices, budget):
+    import httpx2
+
+    request = httpx2.Request("POST", "https://api.example.test/v1/chat")
+    err = httpx2.HTTPStatusError("429", request=request, response=httpx2.Response(429, request=request))
+    down = FallbackModel(failing_model(err, model_name="a"), fallback_on=[ModelHTTPError, httpx2.HTTPError])
+    svc = Service(build_agent(down), Guard(screening_model()), budget, config.limits, prices, ToolContext(product_name="p"))
+    turn = await svc.ask(Conversation(max_turns=5), "hello")
+    assert turn.status == "unavailable" and budget.stats().recent[0].status == "failed"

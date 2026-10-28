@@ -13,7 +13,7 @@ def render_markdown(report: Report) -> str:
         "",
         f"- models: {' → '.join(report.models)}",
         f"- guard: {report.guard}",
-        f"- config version: {report.config_version}; repeat: {report.repeat}",
+        f"- config version: {report.config_version}; prompt version: {report.prompt_version}; repeat: {report.repeat}",
         f"- result: **{passed}/{total} cases**, exit code {report.exit_code}, total cost {report.total_cost_usd:.4f} USD",
         "",
         "| Category | Cases | Runs |",

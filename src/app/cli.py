@@ -14,6 +14,7 @@ import httpx2
 import typer
 from dotenv import load_dotenv
 
+from app.agent import prompts
 from app.agent.core import Conversation, Service, build_agent
 from app.agent.tools import ToolContext
 from app.api.app import create_app
@@ -43,6 +44,7 @@ QUESTION = typer.Argument(None)
 DOWN_OPT = typer.Option([], help="vendor prefix to drop from the chain, e.g. anthropic (outage simulation)")
 NOTE_OPT = typer.Option([], help="free-text note recorded in the report")
 HUB_OPT = typer.Option([], "--hub", help="hub id to ingest (repeatable); default: every hub")
+CASES_OPT = typer.Option(None, help="case file; default evals/cases.yaml, or evals/smoke.yaml with --test")
 
 
 @dataclass
@@ -93,6 +95,11 @@ def compose(*, model_mode: str | None = None, down: list[str] | None = None) -> 
     )
     service = Service(build_agent(chain.model), Guard(guard_model), budget, config.limits, prices, deps)
     return App(settings, config, service, budget, chain.names, guard_name, store)
+
+
+def default_cases(test: bool) -> Path:
+    """The live set asserts facts in the wording; the smoke set only statuses and tools (test-mode answers are canned)."""
+    return ROOT / "evals" / ("smoke.yaml" if test else "cases.yaml")
 
 
 def snapshot_path(p: Path) -> Path:
@@ -149,7 +156,7 @@ def chat(question: list[str] | None = QUESTION, test: bool = TEST_FLAG) -> None:
 
 @cli.command("eval")
 def eval_cmd(
-    cases: Path = ROOT / "evals" / "cases.yaml",
+    cases: Path | None = CASES_OPT,
     repeat: int = typer.Option(1, min=1),
     out: Path = ROOT / "evals" / "results",
     tag: str = "latest",
@@ -159,12 +166,13 @@ def eval_cmd(
 ) -> None:
     """Run evals/cases.yaml, write evals/results/<tag>.{json,md}, exit 0 pass / 1 fail / 2 flaky."""
     app = compose(model_mode="test" if test else None, down=down)
-    loaded = load_cases(cases)
+    loaded = load_cases(cases or default_cases(test))
     notes = list(note) + ([f"simulated outage: {', '.join(down)}"] if down else [])
     report = asyncio.run(
         run_all(
             app.service, loaded, repeat=repeat, models=app.model_names, guard=app.guard_name,
             config_version=app.config.version, max_turns=app.config.limits.max_turns, notes=notes,
+            prompt_version=prompts.PROMPT_VERSION,
         )
     )
     out.mkdir(parents=True, exist_ok=True)
@@ -194,6 +202,9 @@ def ingest(start: str = "2016-01-01", end: str = "2025-12-31", hub: list[str] = 
 
 
 def main() -> None:
+    for stream in (sys.stdout, sys.stderr):  # Windows consoles default to a legacy code page; reports use UTF-8
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8", errors="replace")
     cli()
 
 

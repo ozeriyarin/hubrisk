@@ -92,6 +92,30 @@ reported beside the historical score, never blended into it.
 **Scoping.** 15 hubs, five hazards from daily data, no sub-daily events, no multi-user auth, in-memory sessions.
 The LLM never produces a number: every figure comes from a tool, and answers carry `sources` and `limitations`.
 
+## Evals
+
+`evals/cases.yaml` holds 18 live cases in five categories (in_scope with the four sample questions, off_topic,
+injection, false_positive, followup). `evals/smoke.yaml` is the offline set CI runs. Reports are committed under
+`evals/results/`; a prompt change bumps `PROMPT_VERSION` and ships with a fresh baseline.
+
+| report | what | result |
+|---|---|---|
+| `v3-baseline` | all 18 cases, 2 repeats, Sonnet 5.5 with Jev guard | 18/18 passed, exit 0, 0.77 USD |
+| `v3-anthropic-down` | same cases with `--down anthropic` (outage simulation) | 18/18 passed, exit 0, 0.04 USD; OpenAI answered 429 and every run fell over to Gemini 2.5 Flash |
+
+Sample answers from the baseline (abridged), every number from a tool:
+
+- *Which hubs in the Midwest are most exposed to winter disruption?* Minneapolis 42.3 expected days per year
+  (band 24–70, trend +2.2; cold 37.1, snow 5.2), then Chicago 13.4, Detroit 9.6, Kansas City 6.8, Columbus 6.2.
+- *Compare Miami and Houston in terms of hurricane and flood exposure.* A proxy from heavy-rain and gust days:
+  Houston 20.3 vs Miami 10.6; Houston leads on heavy rain (21.7 vs 9.4 days), Miami slightly on gusts (3.1 vs 2.1).
+- *What percentage of days in Denver last year had snowfall?* 12.1% of 2025 (44 of 365 days); only 1 day reached
+  the 5 cm threshold. Follow-up "and the year before?" gives 13.7% (50 of 366).
+- *Why is the Dallas hub's weather disruption risk high?* 21.68 weighted days per year, 4th of 15; heavy rain
+  contributes 12.72, wind 4.9, heat 3.72; band 6.6–31.9, trend +7.8.
+- *How exposed is our Boston hub?* Boston is not a hub; the agent lists the 15 hubs and offers Newark as the
+  nearest reference instead of inventing a score.
+
 ## Deployment
 
 Render Blueprint in `render.yaml`. Filled in with the live URL and verification date by the deploy spec (v4).

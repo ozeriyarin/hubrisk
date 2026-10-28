@@ -142,7 +142,7 @@ def build_chain(
         raise RuntimeError(f"no model in the chain has a key; set one of the keys in .env.example ({names})")
     if skipped:
         log.info("models skipped for a missing key: %s", ", ".join(skipped))
-    model = models[0] if len(models) == 1 else FallbackModel(*models, fallback_on=[ModelAPIError, truncated])
+    model = models[0] if len(models) == 1 else FallbackModel(*models, fallback_on=[ModelAPIError, httpx2.HTTPError, truncated])
     return Chain(model, kept, skipped)
 
 
