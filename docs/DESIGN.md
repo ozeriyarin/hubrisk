@@ -31,6 +31,8 @@ browser chat page ──HTTP──▶ FastAPI (app/api)
   confidence) with Haiku taking over below `guard_confidence` or on error. Refusals are fixed strings and release
   the budget reservation. In `MODEL_MODE=test` the guard is a keyword heuristic (`offline_guard_model`), a test
   double so smoke evals can distinguish in-scope from off-topic offline.
+- **Greetings cost nothing.** A bare greeting or capability question is answered by `intro_reply` before the
+  guard and the budget, with the four example questions. Anchored patterns keep real questions on the model path.
 - **Spend is bounded twice:** the ledger enforces `BUDGET_USD` per month before every paid call (reserve →
   settle / release), plus `UsageLimits` per turn and per-IP / daily request limits. Provider consoles carry the
   same cap as the hard backstop.

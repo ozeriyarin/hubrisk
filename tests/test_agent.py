@@ -15,7 +15,7 @@ from tests.fakes import answer_model, failing_model, screening_model
 
 async def test_in_scope_question_is_answered_and_recorded(service: Service, budget: Budget):
     conv = Conversation(max_turns=5)
-    turn = await service.ask(conv, "What can you do?")
+    turn = await service.ask(conv, "Which hub is worst for snow?")
     assert turn.status == "answered" and turn.answer == "ok" and turn.served_by == "fake-answer"
     assert turn.model_requests == 1 and turn.input_tokens == 100 and turn.cost_usd > 0
     assert budget.stats().calls == 1 and conv.turns == 1 and len(conv.history) >= 2
@@ -26,7 +26,7 @@ async def test_tool_calls_are_reported(config, prices, budget):
         build_agent(answer_model("ok", tools=["about"])), Guard(screening_model()), budget, config.limits, prices,
         ToolContext(product_name="p"),
     )
-    turn = await svc.ask(Conversation(max_turns=5), "what are you?")
+    turn = await svc.ask(Conversation(max_turns=5), "Which hub is worst for snow?")
     assert turn.tools_used == ["about"] and turn.model_requests == 2
 
 
@@ -52,7 +52,7 @@ async def test_all_models_down_gives_unavailable_not_a_crash(config, prices, bud
         failing_model(ModelHTTPError(status_code=503, model_name="b", body="x"), model_name="b"),
     )
     svc = Service(build_agent(down), Guard(screening_model()), budget, config.limits, prices, ToolContext(product_name="p"))
-    turn = await svc.ask(Conversation(max_turns=5), "hello")
+    turn = await svc.ask(Conversation(max_turns=5), "Which hub is worst for snow?")
     assert turn.status == "unavailable" and turn.answer == prompts.UNAVAILABLE
     assert budget.stats().recent[0].status == "failed"
 
@@ -63,14 +63,14 @@ async def test_fallback_is_visible_in_the_turn(config, prices, budget):
         answer_model("from backup", model_name="backup"),
     )
     svc = Service(build_agent(chain), Guard(screening_model()), budget, config.limits, prices, ToolContext(product_name="p"))
-    turn = await svc.ask(Conversation(max_turns=5), "hello")
+    turn = await svc.ask(Conversation(max_turns=5), "Which hub is worst for snow?")
     assert turn.status == "answered" and turn.served_by == "backup" and turn.failed_attempts == ["primary: error"]
 
 
 async def test_budget_exhausted_refuses_before_the_guard(config, prices, tmp_path):
     budget = Budget(tmp_path / "b.db", cap_usd=0.01)
     svc = Service(build_agent(answer_model()), Guard(screening_model()), budget, config.limits, prices, ToolContext(product_name="p"))
-    turn = await svc.ask(Conversation(max_turns=5), "hello")
+    turn = await svc.ask(Conversation(max_turns=5), "Which hub is worst for snow?")
     assert turn.status == "budget_exhausted" and turn.answer == prompts.BUDGET_EXHAUSTED
 
 
@@ -97,5 +97,5 @@ async def test_transport_http_error_on_every_model_is_unavailable(config, prices
     err = httpx2.HTTPStatusError("429", request=request, response=httpx2.Response(429, request=request))
     down = FallbackModel(failing_model(err, model_name="a"), fallback_on=[ModelHTTPError, httpx2.HTTPError])
     svc = Service(build_agent(down), Guard(screening_model()), budget, config.limits, prices, ToolContext(product_name="p"))
-    turn = await svc.ask(Conversation(max_turns=5), "hello")
+    turn = await svc.ask(Conversation(max_turns=5), "Which hub is worst for snow?")
     assert turn.status == "unavailable" and budget.stats().recent[0].status == "failed"

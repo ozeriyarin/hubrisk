@@ -1,6 +1,8 @@
 """Prompts. Any change here bumps PROMPT_VERSION and is committed with a fresh `agent eval` report."""
 
-PROMPT_VERSION = "1.1.0"
+import re
+
+PROMPT_VERSION = "1.2.0"
 
 # Read by the guard (what counts as in scope) and by the answer model.
 SCOPE_DESCRIPTION = (
@@ -35,8 +37,9 @@ Rules:
 - "Last year" means the last complete year in the data (the dynamic data facts name it). Say which year you used.
 - If a tool returns NotFound, do not guess: say the hub, region, scope or year is not one of ours and list the
   valid values from the tool. If it returns Unavailable, say what is unavailable and why.
-- Explain reasoning briefly: which hazards drive a score, by how much, and what is uncertain. Prefer short
-  paragraphs or a compact list; no tables longer than ten rows.
+- Be brief: lead with the ranking or the number the user asked for, then 3-6 sentences or a list of at most 5
+  short items. No tables. Give more detail only when the user asks for it.
+- Explain reasoning briefly: which hazards drive a score, by how much, and what is uncertain.
 - Follow-up questions refer to the conversation so far; reuse earlier tool results when they already answer it.
 - Call at most three tools per answer and never repeat a call with the same arguments. The data facts below
   already list the hub ids and regions, so call list_hubs only when a name is genuinely unclear.
@@ -50,3 +53,26 @@ REFUSAL_OFF_TOPIC = "I can only help with questions in my scope. Ask me about th
 REFUSAL_INJECTION = "I can't follow instructions that try to change how I work. Ask a question in my scope instead."
 UNAVAILABLE = "All model providers are unavailable right now. Please try again in a minute."
 BUDGET_EXHAUSTED = "This service has reached its monthly spending cap and is paused until next month."
+
+
+INTRO_PATTERN = re.compile(
+    r"^\s*(?:(?:hi|hello|hey|hiya|yo|greetings|good (?:morning|afternoon|evening))(?:\s+there)?"
+    r"|help|what can you (?:do|help(?: me)?(?: with)?)|what do you do|who are you|what are you)[\s!.?]*$",
+    re.IGNORECASE,
+)
+EXAMPLE_QUESTIONS = (
+    "Which hubs in the Midwest are most exposed to winter disruption?",
+    "Compare Miami and Houston in terms of hurricane and flood exposure.",
+    "What percentage of days in Denver last year had snowfall?",
+    "Why is the Dallas hub's weather disruption risk high?",
+)
+INTRO = (
+    "Hi! I'm HubRisk, a weather risk assistant for the company's 15 US distribution hubs. I rank and compare hubs "
+    "by expected weather disruption days per year, explain why a hub scores the way it does, give yearly weather "
+    "statistics, and show current NWS alerts. Try one of these:\n" + "\n".join(f"- {q}" for q in EXAMPLE_QUESTIONS)
+)
+
+
+def intro_reply(message: str) -> str | None:
+    """Fixed intro for a bare greeting or capability question: no guard, no model, no spend."""
+    return INTRO if INTRO_PATTERN.match(message) else None

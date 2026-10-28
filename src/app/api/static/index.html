@@ -4,10 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>HubRisk</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M9 21h15a5 5 0 0 0 0-10 7 7 0 0 0-13-2 5 5 0 0 0-2 12z' fill='%232b5cff'/%3E%3Ccircle cx='16' cy='27' r='3' fill='%23b45309'/%3E%3C/svg%3E">
 <style>
   :root { --bg:#f7f7f5; --fg:#1b1b1b; --muted:#6b6b6b; --card:#fff; --line:#e3e3df; --accent:#2b5cff; --warn:#b45309; }
   @media (prefers-color-scheme: dark) { :root { --bg:#141416; --fg:#ececec; --muted:#9a9a9a; --card:#1e1e22; --line:#2c2c31; } }
   * { box-sizing: border-box; }
+  .meta details { margin-top: 4px; } .meta summary { cursor: pointer; color: var(--muted); }
   body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.45 system-ui, sans-serif; }
   main { max-width: 760px; margin: 0 auto; padding: 16px; display:flex; flex-direction:column; min-height:100vh; }
   header { display:flex; justify-content:space-between; align-items:baseline; gap:12px; margin-bottom:12px; }
@@ -54,15 +56,21 @@
       sessionId = j.session_id;
       pending.textContent = j.answer;
       if (j.status !== 'answered') pending.classList.add('refused');
-      const bits = [j.status];
-      if (j.served_by) bits.push(j.served_by);
-      if (j.failed_attempts && j.failed_attempts.length) bits.push('fallback after: ' + j.failed_attempts.join(', '));
-      if (j.tools_used && j.tools_used.length) bits.push('tools: ' + j.tools_used.join(', '));
-      if (j.cost_usd) bits.push(`$${j.cost_usd.toFixed(4)}`);
-      bits.push(`${j.latency_ms} ms`);
-      if (j.sources && j.sources.length) bits.push('sources: ' + j.sources.join('; '));
-      if (j.limitations && j.limitations.length) bits.push('limits: ' + j.limitations.join('; '));
-      const m = document.createElement('div'); m.className = 'meta'; m.textContent = bits.join(' · '); pending.appendChild(m);
+      // Analysts see sources and limitations; model, tools, cost and latency sit behind a toggle.
+      const meta = document.createElement('div'); meta.className = 'meta';
+      const line = (t) => { const e = document.createElement('div'); e.textContent = t; return e; };
+      if (j.status !== 'answered') meta.appendChild(line(j.status));
+      if (j.sources && j.sources.length) meta.appendChild(line('Sources: ' + j.sources.join('; ')));
+      if (j.limitations && j.limitations.length) meta.appendChild(line('Limitations: ' + j.limitations.join('; ')));
+      const tech = [];
+      if (j.served_by) tech.push(j.served_by);
+      if (j.failed_attempts && j.failed_attempts.length) tech.push('fallback after: ' + j.failed_attempts.join(', '));
+      if (j.tools_used && j.tools_used.length) tech.push('tools: ' + j.tools_used.join(', '));
+      if (j.cost_usd) tech.push(`$${j.cost_usd.toFixed(4)}`);
+      tech.push(`${j.latency_ms} ms`);
+      const details = document.createElement('details'); const summary = document.createElement('summary');
+      summary.textContent = 'details'; details.appendChild(summary); details.appendChild(line(tech.join(' · ')));
+      meta.appendChild(details); pending.appendChild(meta);
     } catch (err) { pending.textContent = 'Request failed: ' + err; pending.classList.add('refused'); }
     finally { send.disabled = false; q.focus(); }
   });

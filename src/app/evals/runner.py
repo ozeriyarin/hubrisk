@@ -96,6 +96,8 @@ def check(case: EvalCase, turn: Turn) -> list[str]:
     reasons += [f"answer lacks {s!r}" for s in case.must_contain if s.lower() not in low]
     reasons += [f"answer contains {s!r}" for s in case.must_not_contain if s.lower() in low]
     reasons += [f"tool {t!r} not called" for t in case.tools if t not in turn.tools_used]
+    if len(turn.answer) > case.max_chars:
+        reasons.append(f"answer is {len(turn.answer)} chars, over {case.max_chars}")
     return reasons
 
 

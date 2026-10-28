@@ -25,6 +25,10 @@ Order is fixed: spec → code + tests → ruff → pytest → eval report (when 
   (Render Blueprint, free tier), `agent verify` record in the README, provider-side limits set 2026-10-28,
   DESIGN deployment section, full session transcript under `docs/ai-session/`.
 
+- **v5 chat polish** (2026-10-28, spec `agent-os/specs/2026-10-28-v5-chat-polish`): favicon, brevity rule +
+  schema cap + eval length check, free intro for greetings, sources/limitations visible with technical fields
+  behind a toggle, baseline `v5-baseline`.
+
 ## Phase 1: MVP (must ship)
 
 1. ~~v0 platform~~ shipped.
@@ -35,9 +39,9 @@ Order is fixed: spec → code + tests → ruff → pytest → eval report (when 
 
 ## Phase 2: Post-launch (bonus, only if time remains)
 
-6. **v5 alerts** — scheduled job recomputes current-risk score per hub from NWS alerts/forecast and fires a webhook
+6. **v6 alerts** — scheduled job recomputes current-risk score per hub from NWS alerts/forecast and fires a webhook
    when a hub's score crosses a band.
-7. **v6 voice** — browser speech-to-text and text-to-speech in the chat page.
+7. **v7 voice** — browser speech-to-text and text-to-speech in the chat page.
 8. **FEMA NRI** — county-level hurricane/flood risk as a secondary signal in the KPI.
 
 ## Out of scope

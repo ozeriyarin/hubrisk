@@ -27,7 +27,7 @@ def test_index_serves_the_chat_page(service, budget):
 
 def test_chat_round_trip_keeps_the_session(service, budget):
     c = make_client(service, budget)
-    r1 = c.post("/api/chat", json={"message": "hi"})
+    r1 = c.post("/api/chat", json={"message": "Which hub is worst for snow?"})
     assert r1.status_code == 200
     body = r1.json()
     assert body["status"] == "answered" and body["answer"] == "ok" and body["session_reset"] is False

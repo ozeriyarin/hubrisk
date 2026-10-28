@@ -73,7 +73,7 @@ async def test_criterion_2_fallback_on_error_or_truncation_is_visible(config, pr
         failing_model(DOWN, model_name="primary"), answer_model("backup", model_name="backup"),
         fallback_on=[ModelAPIError, truncated],
     )
-    turn = await make_service(chain, screening_model(), budget, config, prices).ask(Conversation(max_turns=5), "hi")
+    turn = await make_service(chain, screening_model(), budget, config, prices).ask(Conversation(max_turns=5), "Which hub is worst for snow?")
     assert turn.served_by == "backup" and turn.failed_attempts == ["primary: error"]
     short = text_model("The capital is", finish_reason="length", model_name="primary")
     model = FallbackModel(short, text_model("Paris.", model_name="backup"), fallback_on=[ModelAPIError, truncated])
@@ -109,7 +109,7 @@ async def test_criterion_3_transport_retries_429_and_5xx_not_401_sdk_retries_off
 
 async def test_criterion_4_all_models_down_is_unavailable_and_charged(config, prices, budget):
     down = FallbackModel(failing_model(DOWN, model_name="a"), failing_model(DOWN, model_name="b"))
-    turn = await make_service(down, screening_model(), budget, config, prices).ask(Conversation(max_turns=5), "hi")
+    turn = await make_service(down, screening_model(), budget, config, prices).ask(Conversation(max_turns=5), "Which hub is worst for snow?")
     assert turn.status == "unavailable" and turn.answer == prompts.UNAVAILABLE
     assert budget.stats().recent[0].status == "failed"
 
@@ -165,7 +165,7 @@ def test_criterion_7_budget_reserve_settle_release_cap_and_month(tmp_path: Path)
 
 async def test_criterion_7_budget_exhausted_status(config, prices, tmp_path: Path):
     svc = make_service(answer_model(), screening_model(), Budget(tmp_path / "b.db", cap_usd=0.01), config, prices)
-    turn = await svc.ask(Conversation(max_turns=5), "hello")
+    turn = await svc.ask(Conversation(max_turns=5), "Which hub is worst for snow?")
     assert turn.status == "budget_exhausted" and turn.answer == prompts.BUDGET_EXHAUSTED
 
 
@@ -174,7 +174,7 @@ async def test_criterion_8_runaway_tool_loop_ends_as_cannot_answer(config, price
         return ModelResponse(parts=[ToolCallPart("about", {})], usage=USAGE, model_name="loop")
 
     svc = make_service(FunctionModel(loop, model_name="loop"), screening_model(), budget, config, prices)
-    turn = await svc.ask(Conversation(max_turns=5), "hello")
+    turn = await svc.ask(Conversation(max_turns=5), "Which hub is worst for snow?")
     assert turn.status == "cannot_answer" and budget.stats().recent[0].status == "failed"
 
 

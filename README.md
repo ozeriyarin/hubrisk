@@ -49,6 +49,12 @@ uv run agent ingest
 - **Live:** NOAA NWS active alerts and 7-day forecast per hub, fetched on demand with a 10-minute cache. NWS
   requires an identifying `User-Agent`; set `NWS_USER_AGENT` to include a contact.
 
+## Chat page
+
+A greeting or "what can you do?" gets an instant intro with the four example questions, without a model call.
+Answers lead with the ranking or the number and stay short (a schema cap and an eval check enforce it). Every
+answer shows its sources and limitations; model, tools, cost and latency sit behind a `details` toggle.
+
 ## API
 
 - `GET /health` — version, model chain, guard, and `data` (hubs, date range, rows) when the snapshot is loaded.
@@ -94,13 +100,14 @@ The LLM never produces a number: every figure comes from a tool, and answers car
 
 ## Evals
 
-`evals/cases.yaml` holds 18 live cases in five categories (in_scope with the four sample questions, off_topic,
+`evals/cases.yaml` holds 20 live cases in five categories (in_scope with the four sample questions, off_topic,
 injection, false_positive, followup). `evals/smoke.yaml` is the offline set CI runs. Reports are committed under
 `evals/results/`; a prompt change bumps `PROMPT_VERSION` and ships with a fresh baseline.
 
 | report | what | result |
 |---|---|---|
 | `v3-baseline` | all 18 cases, 2 repeats, Sonnet 5.5 with Jev guard | 18/18 passed, exit 0, 0.77 USD |
+| `v5-baseline` | 20 cases (v3 set + two greetings), brevity check on, prompt 1.2.0 | 20/20 passed, exit 0, 0.37 USD |
 | `v3-anthropic-down` | same cases with `--down anthropic` (outage simulation) | 18/18 passed, exit 0, 0.04 USD; OpenAI answered 429 and every run fell over to Gemini 2.5 Flash |
 
 Sample answers from the baseline (abridged), every number from a tool:
@@ -121,7 +128,8 @@ Sample answers from the baseline (abridged), every number from a tool:
 Live at **https://hubrisk.onrender.com** (Render, free tier, Frankfurt). Deployed from `render.yaml` as a Blueprint; every push to
 main that passes CI auto-deploys.
 
-Verification record (re-run any time with `uv run agent verify https://hubrisk.onrender.com`):
+Verification record (re-run any time with `uv run agent verify https://hubrisk.onrender.com`; it checks
+`/health` and asks "Which hub has the most heavy-snow days per year?" so the model path is exercised):
 
 ```
 Verified 2026-10-28 at https://hubrisk.onrender.com

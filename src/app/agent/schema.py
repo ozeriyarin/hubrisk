@@ -15,7 +15,7 @@ class AnswerOut(BaseModel):
     """What the model must return. Validated by Pydantic AI; a bad reply is retried once with the error."""
 
     status: Literal["answered", "cannot_answer"]
-    answer: str = Field(min_length=1, max_length=4000)
+    answer: str = Field(min_length=1, max_length=2000)  # brevity is a product rule; see prompts
     sources: list[str] = Field(default_factory=list, max_length=20)
     limitations: list[str] = Field(default_factory=list, max_length=10)
 

@@ -43,6 +43,14 @@ def real_deps() -> ToolContext:
     return ToolContext(product_name="hubrisk", hubs=registry, store=store, engine=Engine(store, registry, load_scoring_config()))
 
 
+def latest_baseline() -> Report:
+    """The newest v<N>-baseline report: prompt changes ship a new one, and it must match the committed prompt."""
+    files = sorted(RESULTS.glob("v*-baseline.json"), key=lambda p: int(p.name[1:].split("-")[0]))
+    if not files:
+        pytest.fail("no v<N>-baseline.json report is committed")
+    return Report.model_validate(json.loads(files[-1].read_text(encoding="utf-8")))
+
+
 def report(tag: str) -> Report:
     path = RESULTS / f"{tag}.json"
     if not path.exists():
@@ -82,7 +90,7 @@ async def test_criterion_3_scope_description_and_offline_guard_on_the_smoke_set(
         assert word in scope, word
     guard = Guard(offline_guard_model())
     for case in load_cases(ROOT / "evals" / "smoke.yaml"):
-        if case.category == "injection":
+        if case.category == "injection" or prompts.intro_reply(case.question):
             continue
         previous = case.prior_turns[-1] if case.prior_turns else None
         label = (await guard.screen(case.question, previous=previous)).label
@@ -107,12 +115,13 @@ def test_criterion_4_live_case_set_shape():
 def test_criterion_5_smoke_set_and_cli_defaults(tmp_path: Path, monkeypatch):
     smoke = load_cases(ROOT / "evals" / "smoke.yaml")
     assert {c.category for c in smoke} >= {"in_scope", "off_topic", "injection", "false_positive", "followup"}
-    assert not any(c.must_contain for c in smoke)
+    assert not any(c.must_contain for c in smoke if not prompts.intro_reply(c.question))  # intro answers are fixed text
     assert cli_module.default_cases(test=True).name == "smoke.yaml" and cli_module.default_cases(test=False).name == "cases.yaml"
     monkeypatch.setenv("DB_PATH", str(tmp_path / "ledger.db"))
     result = CliRunner().invoke(cli_module.cli, ["eval", "--test", "--tag", "smoke", "--out", str(tmp_path)])
     assert result.exit_code == 0, result.output
-    assert "fu-year-before" in (tmp_path / "smoke.md").read_text(encoding="utf-8") or "8/8" in (tmp_path / "smoke.md").read_text(encoding="utf-8")
+    ids = {c["id"] for c in json.loads((tmp_path / "smoke.json").read_text(encoding="utf-8"))["cases"]}
+    assert {"fu-year-before", "greet-hi"} <= ids
 
 
 async def test_criterion_6_scripted_model_through_service_with_real_engine(config, prices, budget):
@@ -132,7 +141,7 @@ async def test_criterion_6_scripted_model_through_service_with_real_engine(confi
 
 
 def test_criterion_7_baseline_report_is_committed_and_healthy():
-    r = report("v3-baseline")
+    r = latest_baseline()
     assert r.config_version == load_agent_config().version and r.prompt_version == prompts.PROMPT_VERSION
     assert r.exit_code in (0, 2), r.exit_code
     passed = sum(c.passed for c in r.cases)
@@ -156,4 +165,4 @@ def test_criterion_9_chat_page_shows_sources_and_limitations(service, budget):
 
 def test_criterion_10_prompt_version_recorded():
     assert re.fullmatch(r"\d+\.\d+\.\d+", prompts.PROMPT_VERSION)
-    assert report("v3-baseline").prompt_version == prompts.PROMPT_VERSION
+    assert latest_baseline().prompt_version == prompts.PROMPT_VERSION

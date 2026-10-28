@@ -210,7 +210,7 @@ def verify(url: str, timeout_s: float = 90.0) -> None:
         http = retrying_http_client(attempts=4, timeout_s=timeout_s, max_wait_s=30)
         async with http:
             health = (await http.get(f"{base}/health")).json()
-            chat = (await http.post(f"{base}/api/chat", json={"message": "What can you help me with?"})).json()
+            chat = (await http.post(f"{base}/api/chat", json={"message": "Which hub has the most heavy-snow days per year?"})).json()
         return check_health(health) + check_chat(chat) + [verification_record(base, health, chat)]
 
     try:

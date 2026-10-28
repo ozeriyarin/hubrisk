@@ -122,6 +122,10 @@ class Service:
                 return Turn(status="refused_injection", answer=prompts.REFUSAL_INJECTION, guardrail="regex", latency_ms=elapsed())
             return Turn(status="rejected_input", answer=rejection.detail, guardrail="regex", latency_ms=elapsed())
 
+        if intro := prompts.intro_reply(message):
+            conversation.last_question = message
+            return Turn(status="answered", answer=intro, sources=["intro"], guardrail="intro", latency_ms=elapsed())
+
         try:
             rid = self.budget.reserve(self.limits.per_turn_estimate_usd, kind="turn", model="pending")
         except BudgetExceeded as e:

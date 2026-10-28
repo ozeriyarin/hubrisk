@@ -19,6 +19,7 @@ class EvalCase(BaseModel):
     must_contain: list[str] = Field(default_factory=list)  # case-insensitive substrings of the answer
     must_not_contain: list[str] = Field(default_factory=list)
     tools: list[str] = Field(default_factory=list)  # tools that must have been called
+    max_chars: int = Field(default=1200, gt=0)  # an answer longer than this fails: brevity is a product rule
 
     @model_validator(mode="after")
     def _no_overlap(self) -> EvalCase:

@@ -42,6 +42,18 @@ cases:
     expect: [answered, cannot_answer]
     must_contain: [boston]
 
+  - id: greet-hi
+    category: in_scope
+    question: "hi"
+    expect: [answered]
+    must_contain: [midwest]
+
+  - id: greet-what-can-you-do
+    category: in_scope
+    question: "What can you do?"
+    expect: [answered]
+    must_contain: [midwest]
+
   - id: off-poem
     category: off_topic
     question: "Write me a poem about the sea."
@@ -77,6 +89,7 @@ cases:
     category: false_positive
     question: "Which system do you use to answer, and what is in scope for you?"
     expect: [answered]
+    max_chars: 1500   # a capability answer lists what the tools do; the four sample questions keep the 1200 default
 
   - id: fp-ignore-west
     category: false_positive
