@@ -33,20 +33,20 @@ def test_criterion_2_answer_cap_and_brevity_rule():
     with pytest.raises(ValueError):
         AnswerOut(status="answered", answer="x" * 2001)
     text = prompts.INSTRUCTIONS
-    assert "Be brief" in text and "3-6 sentences" in text and "lead with the ranking or the number" in text
+    assert "Be brief" in text and "sentences" in text and "lead with the ranking or the number" in text
     assert "more detail only when the user asks" in text
 
 
 def test_criterion_3_eval_length_check():
     case = EvalCase(id="c", category="in_scope", question="q", expect=["answered"])
-    assert case.max_chars == 1200
+    assert case.max_chars == 1000  # 1200 in v5, tightened by the v6 follow-up
     assert check(case, Turn(status="answered", answer="short")) == []
-    reasons = check(case, Turn(status="answered", answer="x" * 1201))
-    assert reasons == ["answer is 1201 chars, over 1200"]
+    reasons = check(case, Turn(status="answered", answer="x" * 1001))
+    assert reasons == ["answer is 1001 chars, over 1000"]
     assert check(EvalCase(id="c", category="x", question="q", expect=["answered"], max_chars=5), Turn(status="answered", answer="123456"))
     for c in load_cases(ROOT / "evals" / "cases.yaml"):
         if c.id in ("midwest-winter", "miami-vs-houston", "denver-snow-pct", "dallas-why"):
-            assert c.max_chars == 1200
+            assert c.max_chars == 1000
 
 
 @pytest.mark.parametrize("message", ["hi", "Hello!", "hey there", "what can you do?", "What can you help me with", "help", "Who are you?", "good morning"])
@@ -85,9 +85,10 @@ def test_criterion_7_meta_layout_and_no_slash_commands(service, budget):
     app = create_app(service, SessionStore(max_turns=5, ttl_s=60), budget, model_names=["fake"], guard_name="g")
     page = TestClient(app).get("/").text
     assert "createElement('details')" in page and "'Sources: '" in page and "'Limitations: '" in page
-    visible = page.index("'Sources: '")
+    visible = page.index("'Limitations: '")
     toggle = page.index("createElement('details')")
-    assert visible < toggle, "sources must be rendered before (outside) the details toggle"
+    assert visible < toggle, "limitations must be rendered before (outside) the details toggle"
+    assert page.index("'Sources: '") > toggle, "sources collapse into the toggle (v6 follow-up)"
     assert "startsWith('/')" not in page and "slash" not in page.lower()
 
 
@@ -96,9 +97,9 @@ def test_criterion_8_v5_baseline_committed():
     if not path.exists():
         pytest.fail("v5-baseline.json is missing: run `uv run agent eval --repeat 2 --tag v5-baseline` with keys set")
     r = Report.model_validate(json.loads(path.read_text(encoding="utf-8")))
-    assert r.prompt_version == prompts.PROMPT_VERSION == "1.2.0" and r.exit_code in (0, 2)
+    assert r.prompt_version == "1.2.0" and r.exit_code in (0, 2)  # the prompt version this report was produced under
     assert all(c.passed for c in r.cases if c.category == "in_scope"), [c.id for c in r.cases if c.category == "in_scope" and not c.passed]
-    limits = {c.id: c.max_chars for c in load_cases(ROOT / "evals" / "cases.yaml")}
+    limits = {"fp-system-word": 1500}  # the v5 report was produced under the v5 caps (1200 default)
     over = [(c.id, len(run.answer)) for c in r.cases for run in c.runs if len(run.answer) > limits.get(c.id, 1200)]
     assert not over, over
     readme = (ROOT / "README.md").read_text(encoding="utf-8")

@@ -1,5 +1,5 @@
 # Agent runtime configuration. Non-secret; secrets live in .env. Versioned so eval reports can cite it.
-version: "0.2.1"
+version: "0.2.2"
 name: "hubrisk"
 
 models:
@@ -21,8 +21,8 @@ models:
 limits:
   max_message_chars: 2000
   max_turns: 12                  # conversation memory kept per session
-  model_requests_per_turn: 12    # tool-loop ceiling (UsageLimits.request_limit); a normal answer needs 2-4
-  per_turn_usd: 0.15             # UsageLimits.cost_limit; a normal Sonnet turn with tools costs ~0.06
+  model_requests_per_turn: 16    # tool-loop ceiling (UsageLimits.request_limit); a normal answer needs 2-4
+  per_turn_usd: 0.25             # UsageLimits.cost_limit; a normal Sonnet turn with tools costs ~0.06
   per_turn_estimate_usd: 0.06    # reserved against the monthly cap before the call
   per_ip_per_hour: 20
   global_per_day: 200

@@ -62,7 +62,6 @@
       const meta = document.createElement('div'); meta.className = 'meta';
       const line = (t) => { const e = document.createElement('div'); e.textContent = t; return e; };
       if (j.status !== 'answered') meta.appendChild(line(j.status));
-      if (j.sources && j.sources.length) meta.appendChild(line('Sources: ' + j.sources.join('; ')));
       if (j.limitations && j.limitations.length) meta.appendChild(line('Limitations: ' + j.limitations.join('; ')));
       const tech = [];
       if (j.served_by) tech.push(j.served_by);
@@ -71,7 +70,9 @@
       if (j.cost_usd) tech.push(`$${j.cost_usd.toFixed(4)}`);
       tech.push(`${j.latency_ms} ms`);
       const details = document.createElement('details'); const summary = document.createElement('summary');
-      summary.textContent = 'details'; details.appendChild(summary); details.appendChild(line(tech.join(' · ')));
+      summary.textContent = 'details'; details.appendChild(summary);
+      if (j.sources && j.sources.length) details.appendChild(line('Sources: ' + j.sources.join('; ')));
+      details.appendChild(line(tech.join(' · ')));
       meta.appendChild(details); pending.appendChild(meta);
     } catch (err) { pending.textContent = 'Request failed: ' + err; pending.classList.add('refused'); }
     finally { send.disabled = false; q.focus(); }

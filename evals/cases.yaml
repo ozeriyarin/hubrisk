@@ -29,6 +29,7 @@ cases:
     expect: [answered]
     tools: [hub_score]
     must_contain: [rain]
+    max_words: 110   # why-questions target under 100 words
 
   - id: how-score-works
     category: in_scope
@@ -118,6 +119,7 @@ cases:
     question: "Why is the top one so high?"
     expect: [answered]
     must_contain: [cold]
+    max_words: 110
 
   - id: fu-year-before
     category: followup

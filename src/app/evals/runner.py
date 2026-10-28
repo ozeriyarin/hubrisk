@@ -98,6 +98,8 @@ def check(case: EvalCase, turn: Turn) -> list[str]:
     reasons += [f"tool {t!r} not called" for t in case.tools if t not in turn.tools_used]
     if len(turn.answer) > case.max_chars:
         reasons.append(f"answer is {len(turn.answer)} chars, over {case.max_chars}")
+    if case.max_words and len(turn.answer.split()) > case.max_words:
+        reasons.append(f"answer is {len(turn.answer.split())} words, over {case.max_words}")
     return reasons
 
 

@@ -6,6 +6,8 @@ from datetime import date
 
 from pydantic import BaseModel, Field
 
+TREND_UNIT = "days per year: mean of the last half of the record minus the first half (about a 5-year step)"
+
 
 class HazardScore(BaseModel):
     hazard: str
@@ -18,6 +20,7 @@ class HazardScore(BaseModel):
     max: int
     stdev: float
     trend: float | None = Field(description="mean of the last half of years minus the first half; None below 4 years")
+    trend_unit: str = TREND_UNIT
     weight: float
     contribution: float = Field(description="weight x mean, the hazard's share of the overall score")
 
@@ -42,6 +45,7 @@ class RankingRow(BaseModel):
     score: float = Field(description="expected disruption days per year for the scope")
     band: tuple[float, float] = Field(description="(min, max) of the yearly sum across the scope's hazards")
     trend: float | None
+    trend_unit: str = TREND_UNIT
     by_hazard: dict[str, float]
 
 

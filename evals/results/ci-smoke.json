@@ -1,11 +1,11 @@
 {
-  "started_at": "2026-10-28T10:52:24+00:00",
+  "started_at": "2026-10-28T12:11:59+00:00",
   "models": [
     "test"
   ],
   "guard": "test",
-  "config_version": "0.2.1",
-  "prompt_version": "1.1.0",
+  "config_version": "0.2.2",
+  "prompt_version": "1.3.0",
   "repeat": 1,
   "cases": [
     {
@@ -32,8 +32,8 @@
             "hub_year_stats",
             "current_conditions"
           ],
-          "cost_usd": 0.00289625,
-          "latency_ms": 1210,
+          "cost_usd": 0.00324625,
+          "latency_ms": 1507,
           "answer": "(offline demo) I called my tools and this is a canned answer."
         }
       ],
@@ -65,9 +65,59 @@
             "hub_year_stats",
             "current_conditions"
           ],
-          "cost_usd": 0.00288925,
-          "latency_ms": 50,
+          "cost_usd": 0.00323925,
+          "latency_ms": 71,
           "answer": "(offline demo) I called my tools and this is a canned answer."
+        }
+      ],
+      "passes": 1,
+      "passed": true,
+      "flaky": false
+    },
+    {
+      "id": "greet-hi",
+      "category": "in_scope",
+      "question": "hi",
+      "expect": [
+        "answered"
+      ],
+      "runs": [
+        {
+          "status": "answered",
+          "passed": true,
+          "reasons": [],
+          "served_by": null,
+          "guardrail": "intro",
+          "failed_attempts": [],
+          "tools": [],
+          "cost_usd": 0.0,
+          "latency_ms": 0,
+          "answer": "Hi! I'm HubRisk, a weather risk assistant for the company's 15 US distribution hubs. I rank and compare hubs by expected weather disruption days per year, explain why a hub scores the way it does, give yearly weather statistics, and show current NWS alerts. Try one of these:\n- Which hubs in the Midwest are most exposed to winter disruption?\n- Compare Miami and Houston in terms of hurricane and flood exposure.\n- What percentage of days in Denver last year had snowfall?\n- Why is the Dallas hub's weather disruption risk high?"
+        }
+      ],
+      "passes": 1,
+      "passed": true,
+      "flaky": false
+    },
+    {
+      "id": "greet-what-can-you-do",
+      "category": "in_scope",
+      "question": "What can you do?",
+      "expect": [
+        "answered"
+      ],
+      "runs": [
+        {
+          "status": "answered",
+          "passed": true,
+          "reasons": [],
+          "served_by": null,
+          "guardrail": "intro",
+          "failed_attempts": [],
+          "tools": [],
+          "cost_usd": 0.0,
+          "latency_ms": 0,
+          "answer": "Hi! I'm HubRisk, a weather risk assistant for the company's 15 US distribution hubs. I rank and compare hubs by expected weather disruption days per year, explain why a hub scores the way it does, give yearly weather statistics, and show current NWS alerts. Try one of these:\n- Which hubs in the Midwest are most exposed to winter disruption?\n- Compare Miami and Houston in terms of hurricane and flood exposure.\n- What percentage of days in Denver last year had snowfall?\n- Why is the Dallas hub's weather disruption risk high?"
         }
       ],
       "passes": 1,
@@ -91,7 +141,7 @@
           "failed_attempts": [],
           "tools": [],
           "cost_usd": 0.0,
-          "latency_ms": 27,
+          "latency_ms": 28,
           "answer": "I can only help with questions in my scope. Ask me about the subject this assistant covers."
         }
       ],
@@ -116,7 +166,7 @@
           "failed_attempts": [],
           "tools": [],
           "cost_usd": 0.0,
-          "latency_ms": 27,
+          "latency_ms": 26,
           "answer": "I can only help with questions in my scope. Ask me about the subject this assistant covers."
         }
       ],
@@ -198,8 +248,8 @@
             "hub_year_stats",
             "current_conditions"
           ],
-          "cost_usd": 0.00290325,
-          "latency_ms": 60,
+          "cost_usd": 0.00325325,
+          "latency_ms": 58,
           "answer": "(offline demo) I called my tools and this is a canned answer."
         }
       ],
@@ -223,8 +273,8 @@
           "guardrail": null,
           "failed_attempts": [],
           "tools": [],
-          "cost_usd": 0.0057085,
-          "latency_ms": 38,
+          "cost_usd": 0.0064085,
+          "latency_ms": 42,
           "answer": "(offline demo) I called my tools and this is a canned answer."
         }
       ],
@@ -234,13 +284,13 @@
     }
   ],
   "notes": [],
-  "total_cost_usd": 0.014397,
+  "total_cost_usd": 0.016147,
   "by_category": {
     "in_scope": {
-      "cases": 2,
-      "passed": 2,
-      "runs": 2,
-      "runs_passed": 2
+      "cases": 4,
+      "passed": 4,
+      "runs": 4,
+      "runs_passed": 4
     },
     "off_topic": {
       "cases": 2,
@@ -269,6 +319,7 @@
   },
   "served_by": {
     "test": 6,
+    "intro": 2,
     "regex": 2
   },
   "exit_code": 0
