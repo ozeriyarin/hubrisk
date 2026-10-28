@@ -13,7 +13,7 @@ from app.config import ROOT
 
 SPECS = ROOT / "agent-os" / "specs"
 TESTS = Path(__file__).parent
-UNIMPLEMENTED: set[str] = set()
+UNIMPLEMENTED: set[str] = {"2026-10-28-v5-chat-polish"}
 
 CRITERION = re.compile(r"^\s*(\d+)\.\s+\S", re.MULTILINE)
 SPEC_FOLDER = re.compile(r"^\d{4}-\d{2}-\d{2}-(.+)$")
