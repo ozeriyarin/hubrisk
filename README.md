@@ -57,6 +57,9 @@ A greeting or "what can you do?" gets an instant intro with the four example que
 Answers lead with the ranking or the number and stay short (a schema cap and an eval check enforce it). Every
 answer shows its limitations; sources, model, tools, cost and latency sit behind a `details` toggle. "Why"
 answers lead with the score and the main driver, list only the material hazards, and offer the full breakdown.
+Voice (bonus): the microphone button transcribes a question with the browser's Web Speech API (Chrome and Edge;
+hidden where unsupported) and sends it; a spoken question gets a spoken answer, and the speaker toggle reads
+every answer aloud. Only the answer is spoken, never sources or limitations.
 
 ## API
 

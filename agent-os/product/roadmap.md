@@ -36,6 +36,9 @@ Order is fixed: spec → code + tests → ruff → pytest → eval report (when 
 - **v7 alerts** (2026-10-28, spec `agent-os/specs/2026-10-28-v7-alerts`): live risk level per hub from NWS,
   scheduled check + webhook on change, `agent alerts-check`, `/api/alerts`, GitHub Actions cron trigger.
 
+- **v8 voice** (2026-10-28, spec `agent-os/specs/2026-10-28-v8-voice`): browser speech-to-text mic button and
+  spoken answers (speaker toggle), Web Speech API only.
+
 ## Phase 1: MVP (must ship)
 
 1. ~~v0 platform~~ shipped.
@@ -47,7 +50,7 @@ Order is fixed: spec → code + tests → ruff → pytest → eval report (when 
 ## Phase 2: Post-launch (bonus, only if time remains)
 
 6. ~~v7 alerts~~ shipped.
-7. **v8 voice** — browser speech-to-text and text-to-speech in the chat page.
+7. ~~v8 voice~~ shipped.
 8. **FEMA NRI** — county-level hurricane/flood risk as a secondary signal in the KPI.
 
 ## Out of scope

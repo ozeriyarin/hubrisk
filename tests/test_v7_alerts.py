@@ -173,7 +173,14 @@ async def test_criterion_7_scheduler_runs_and_stops():
     assert len(runs) == count
     web = FastAPI()
     alerts = AlertService(HubRegistry.load(), nws_on(warning_everywhere), AlertStore(":memory:"), WebhookNotifier(None))
-    assert isinstance(cli_module.attach_scheduler(web, alerts, 60), Scheduler)
+    scheduler = cli_module.attach_scheduler(web, alerts, 60)
+    assert isinstance(scheduler, Scheduler)
+    with TestClient(web):  # startup runs the first check immediately through the lifespan hook
+        for _ in range(50):
+            if scheduler.runs:
+                break
+            await asyncio.sleep(0.02)
+    assert scheduler.runs >= 1 and len(alerts.current()) == 15
     assert Settings(_env_file=None).alert_interval_min == 0
 
 
