@@ -13,13 +13,15 @@ Order is fixed: spec → code + tests → ruff → pytest → eval report (when 
   Open-Meteo 2016–2025 daily history committed as Parquet (54,795 rows), DuckDB store, NWS alerts/forecast client
   with cache and degradation, `agent ingest`, `/health` data coverage, 12 criterion tests.
 
+- **v2 disruption KPI** (2026-10-28, spec `agent-os/specs/2026-10-28-v2-disruption-kpi`): versioned thresholds and
+  weights, pure scoring engine (days/year per hazard, band, trend, weighted overall), six deterministic tools that
+  never raise, 12 criterion tests.
+
 ## Phase 1: MVP (must ship)
 
 1. ~~v0 platform~~ shipped.
 2. ~~v1 hubs and data~~ shipped.
-3. **v2 disruption KPI** — scoring engine: per-hazard disruption days/year from thresholds, uncertainty band, 5-year
-   trend, weighted overall score from versioned YAML; tools: rank hubs (filter by region/hazard), compare hubs,
-   hub stats (e.g. % snow days in a year), explain hub score, current conditions.
+3. ~~v2 disruption KPI~~ shipped.
 4. **v3 agent** — prompts, tools wired, `AnswerOut` schema enforced, eval cases per category (in_scope, off_topic,
    injection, false_positive, followup) covering the four sample questions, first committed eval report.
 5. **v4 deploy** — Render live, `/health` and chat verified from the public URL, provider-side spend limits set,

@@ -66,8 +66,31 @@ uv run agent ingest
 
 ## Assumptions, uncertainty and scoping
 
-Filled in by the hubs, scoring and agent specs (v1–v3). See `agent-os/product/mission.md` for the current
-scope statement.
+**The KPI.** Expected disruption days per year, per hub and per hazard. A disruption day is a day whose daily
+weather crosses an operational threshold. Rules and weights live in `config/scoring.yaml` (version 1.0.0):
+
+| hazard | rule | weight | rationale |
+|---|---|---|---|
+| snow | `snow_cm >= 5` | 1 | heavy snowfall closes yards and roads |
+| wind | `gust_kmh >= 70` | 1 | damaging gusts stop loading and flights |
+| rain | `precip_mm >= 25` | 0.8 | heavy rain; the flood proxy |
+| cold | `tmin_c <= -15` | 0.7 | extreme cold: equipment and staffing |
+| heat | `tmax_c >= 38` | 0.3 | extreme heat slows work but rarely closes a hub (Phoenix would otherwise dominate) |
+
+Overall score = Σ weight × expected days. Groups: **winter** = snow + cold; **hurricane_flood** = rain + wind, a
+proxy until a hurricane or flood dataset is wired in (every answer says so); **heat** = heat.
+
+**Assumptions.** Thresholds were chosen after measuring the 2016–2025 snapshot so each hazard separates hubs;
+they are plausible operational limits, not calibrated to the company's outage records (none available). Weather
+is ERA5 reanalysis at the hub coordinate, not the facility footprint. Only complete years (≥ 360 days) count.
+
+**Uncertainty.** Every per-hazard figure ships with per-year counts, min, max and standard deviation across
+years, and a trend (mean of the last half of years minus the first half). Ten years is short for rare hazards;
+the band is the honest uncertainty we can show. "Right now" risk comes from NWS alerts and forecast and is
+reported beside the historical score, never blended into it.
+
+**Scoping.** 15 hubs, five hazards from daily data, no sub-daily events, no multi-user auth, in-memory sessions.
+The LLM never produces a number: every figure comes from a tool, and answers carry `sources` and `limitations`.
 
 ## Deployment
 

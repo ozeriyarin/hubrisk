@@ -26,7 +26,7 @@ figure an answer can contain exists as a typed tool result.
 7. `year_stats(rows, year)` reports days in the year (365/366), days with any snowfall and any precipitation, threshold days per hazard, extremes, and percentages computed from the real day count.
 8. Tools never raise: an unknown hub, region, hazard or year returns `NotFound` listing valid values; a missing store returns `Unavailable` with a reason; every result carries `scoring_version` and `data_through`.
 9. `rank_hubs`, `compare_hubs`, `hub_score`, `hub_year_stats`, `current_conditions` and `list_hubs` are registered beside `about`, and `current_conditions` returns alerts and forecast with their `available` flags from the NWS client.
-10. On the committed snapshot: the top three winter hubs are all Midwest, Houston or Miami tops `hurricane_flood`, Phoenix tops `heat`, and Denver's 2025 any-snow percentage equals the DuckDB count divided by 365.
+10. On the committed snapshot: Minneapolis tops `winter` and at least three Midwest hubs rank above every South hub on it (Denver, in the West, ranks second), Houston or Miami tops `hurricane_flood`, Phoenix tops `heat`, and Denver's 2025 any-snow percentage equals the DuckDB count divided by 365.
 11. `agent eval --test` on the committed cases exits 0 with the tools registered.
 12. README documents every hazard rule and weight from `scoring.yaml` with the rationale and the heat caveat, and the documented thresholds match the file.
 

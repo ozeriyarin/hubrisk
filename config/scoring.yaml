@@ -1,0 +1,14 @@
+# Disruption KPI: a disruption day is a day crossing an operational threshold. Versioned; every score cites it.
+# Thresholds were chosen after measuring the 2016-2025 snapshot so each hazard separates hubs. They are stated
+# assumptions, not calibrated to outage records (see README "Assumptions").
+version: "1.0.0"
+hazards:
+  snow: {variable: snow_cm,   op: ">=", threshold: 5,   weight: 1.0, label: "heavy snowfall (>= 5 cm/day)"}
+  wind: {variable: gust_kmh,  op: ">=", threshold: 70,  weight: 1.0, label: "damaging wind gust (>= 70 km/h)"}
+  rain: {variable: precip_mm, op: ">=", threshold: 25,  weight: 0.8, label: "heavy rain (>= 25 mm/day), flood proxy"}
+  cold: {variable: tmin_c,    op: "<=", threshold: -15, weight: 0.7, label: "extreme cold (<= -15 C)"}
+  heat: {variable: tmax_c,    op: ">=", threshold: 38,  weight: 0.3, label: "extreme heat (>= 38 C); slows work, rarely closes"}
+groups:
+  winter: [snow, cold]
+  hurricane_flood: [rain, wind]   # proxy until a hurricane/flood dataset is wired in
+  heat: [heat]

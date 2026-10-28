@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
 
+import httpx2
 import typer
 from dotenv import load_dotenv
 
@@ -31,6 +32,8 @@ from app.evals.report import render_markdown
 from app.evals.runner import run_all
 from app.llm.budget import Budget
 from app.llm.models import build_chain, retrying_http_client, without_vendors
+from app.scoring.config import load_scoring_config
+from app.scoring.engine import Engine
 
 os.environ.setdefault("PYDANTIC_AI_NO_BANNER", "1")
 cli = typer.Typer(no_args_is_help=True, add_completion=False)
@@ -78,10 +81,16 @@ def compose(*, model_mode: str | None = None, down: list[str] | None = None) -> 
     store = Store.open_if_present(snapshot_dir)
     if store is None:
         log.warning("no snapshot at %s: historical data unavailable until `agent ingest` runs", snapshot_dir)
-    live_http = retrying_http_client(
-        attempts=config.models.retry_attempts, timeout_s=config.models.timeout_s, max_wait_s=config.models.retry_max_wait_s
+    if settings.model_mode == "test":  # offline: live calls fail fast and degrade, never touch the network
+        live_http = httpx2.AsyncClient(transport=httpx2.MockTransport(lambda r: httpx2.Response(503, json={"title": "test mode"})))
+    else:
+        live_http = retrying_http_client(
+            attempts=config.models.retry_attempts, timeout_s=config.models.timeout_s, max_wait_s=config.models.retry_max_wait_s
+        )
+    engine = Engine(store, registry, load_scoring_config()) if store else None
+    deps = ToolContext(
+        product_name=config.name, hubs=registry, store=store, nws=NWSClient(live_http, settings.nws_user_agent), engine=engine
     )
-    deps = ToolContext(product_name=config.name, hubs=registry, store=store, nws=NWSClient(live_http, settings.nws_user_agent))
     service = Service(build_agent(chain.model), Guard(guard_model), budget, config.limits, prices, deps)
     return App(settings, config, service, budget, chain.names, guard_name, store)
 

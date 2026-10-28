@@ -49,7 +49,18 @@ browser chat page ──HTTP──▶ FastAPI (app/api)
 - `ingest.py`: sequential per-hub fetch with a pause and long-backoff retries (the archive answers 429 to bursts),
   one atomic snapshot write.
 
-Still to come: `app/scoring` (v2) and the domain tools and prompts in `app/agent` (v3).
+## Scoring (`app/scoring`)
+
+- `config.py`: `config/scoring.yaml` → `ScoringConfig` (hazards with variable, operator, threshold, weight, label;
+  groups). Validated at load; the version string travels with every result.
+- `engine.py`: pure functions over `DailyRow` lists (`hazard_days`, `score_hazard`, `score_hub`, `year_stats`,
+  `trend`) and `Engine`, which reads the store once per hub and caches `HubScore`. Rankings sort by scope
+  (overall, hazard, or group) with ties broken by hub id; the overall scope is weighted, groups are plain sums.
+- Tools in `app/agent/tools.py` are thin: resolve names through the registry, call the engine or the NWS client,
+  return typed models. They never raise; `NotFound` and `Unavailable` are return values, so a wrong hub name or a
+  missing snapshot becomes something the model can explain.
+
+Still to come: the domain prompts and eval cases in `app/agent` (v3).
 
 ## Repository structure
 

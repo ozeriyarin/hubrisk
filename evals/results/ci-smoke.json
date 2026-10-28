@@ -1,5 +1,5 @@
 {
-  "started_at": "2026-10-28T09:06:17+00:00",
+  "started_at": "2026-10-28T09:56:06+00:00",
   "models": [
     "test"
   ],
@@ -23,10 +23,16 @@
           "guardrail": null,
           "failed_attempts": [],
           "tools": [
-            "about"
+            "about",
+            "list_hubs",
+            "rank_hubs",
+            "compare_hubs",
+            "hub_score",
+            "hub_year_stats",
+            "current_conditions"
           ],
-          "cost_usd": 0.0007665,
-          "latency_ms": 332,
+          "cost_usd": 0.0028105,
+          "latency_ms": 1945,
           "answer": "(offline demo) I called my tools and this is a canned answer."
         }
       ],
@@ -51,7 +57,7 @@
           "failed_attempts": [],
           "tools": [],
           "cost_usd": 0.0,
-          "latency_ms": 39,
+          "latency_ms": 31,
           "answer": "I can only help with questions in my scope. Ask me about the subject this assistant covers."
         }
       ],
@@ -76,7 +82,7 @@
           "failed_attempts": [],
           "tools": [],
           "cost_usd": 0.0,
-          "latency_ms": 35,
+          "latency_ms": 31,
           "answer": "I can only help with questions in my scope. Ask me about the subject this assistant covers."
         }
       ],
@@ -175,10 +181,16 @@
           "guardrail": null,
           "failed_attempts": [],
           "tools": [
-            "about"
+            "about",
+            "list_hubs",
+            "rank_hubs",
+            "compare_hubs",
+            "hub_score",
+            "hub_year_stats",
+            "current_conditions"
           ],
-          "cost_usd": 0.0007945,
-          "latency_ms": 160,
+          "cost_usd": 0.0028385,
+          "latency_ms": 70,
           "answer": "(offline demo) I called my tools and this is a canned answer."
         }
       ],
@@ -188,7 +200,7 @@
     }
   ],
   "notes": [],
-  "total_cost_usd": 0.001561,
+  "total_cost_usd": 0.005649,
   "by_category": {
     "in_scope": {
       "cases": 1,

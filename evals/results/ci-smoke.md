@@ -1,9 +1,9 @@
-# Eval report — 2026-10-28T09:06:17+00:00
+# Eval report — 2026-10-28T09:56:06+00:00
 
 - models: test
 - guard: test
 - config version: 0.1.0; repeat: 1
-- result: **7/7 cases**, exit code 0, total cost 0.0016 USD
+- result: **7/7 cases**, exit code 0, total cost 0.0056 USD
 
 | Category | Cases | Runs |
 |---|---|---|
