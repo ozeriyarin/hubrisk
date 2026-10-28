@@ -47,7 +47,7 @@ def test_criterion_4_brevity_follow_up():
     from app.evals.cases import EvalCase, load_cases
     from app.evals.runner import Report
 
-    assert prompts.PROMPT_VERSION == "1.3.0" and "2-4 sentences" in prompts.INSTRUCTIONS
+    assert tuple(map(int, prompts.PROMPT_VERSION.split("."))) >= (1, 3, 0) and "2-4 sentences" in prompts.INSTRUCTIONS
     assert "Do not restate threshold rules" in prompts.INSTRUCTIONS and "under 100 words" in prompts.INSTRUCTIONS
     assert "offer of the full breakdown" in prompts.INSTRUCTIONS and "only when the user asks" in prompts.INSTRUCTIONS
     from app.agent.schema import Turn

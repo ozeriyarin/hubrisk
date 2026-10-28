@@ -176,8 +176,8 @@ baseline. Current state: every committed report passes every in_scope case; the 
 | `v6-baseline` | 20 cases, "why" format rules + word caps, prompt 1.3.0 | 20/20, exit 0, 0.61 USD | in_scope 8/8, off_topic 3/3, injection 3/3, false_positive 3/3, followup 3/3 | claude-sonnet-5-5 x12, jev-1.14.0 x3 |
 | `v9-baseline` | 20 cases, prompt caching on, Sonnet 5.5, config 0.3.0 | 20/20, exit 0, 0.16 USD | in_scope 8/8, off_topic 3/3, injection 3/3, false_positive 3/3, followup 3/3 | claude-sonnet-5-5 x12, jev-1.14.0 x3 |
 | `v9-haiku` | 20 cases on `--model anthropic:claude-haiku-5-5` (experiment) | 20/20, exit 0, 0.01 USD | in_scope 8/8, off_topic 3/3, injection 3/3, false_positive 3/3, followup 3/3 | claude-haiku-5-5 x12, jev-1.14.0 x3 |
-| `v10-baseline` | 43 cases incl. Hebrew, grounding check, 3 repeats, Sonnet 5.5 | 42/43, exit 2, 1.12 USD | in_scope 28/28, off_topic 3/3, injection 3/3, false_positive 3/3, followup 5/6 | claude-sonnet-5-5 x105, jev-1.14.0 x9 |
-| `v10-anthropic-down` | 43 cases with `--down anthropic`, grounding check | 43/43, exit 0, 0.09 USD | in_scope 28/28, off_topic 3/3, injection 3/3, false_positive 3/3, followup 6/6 | gemini-2.5-flash x35, jev-1.14.0 x3 |
+| `v10-baseline` | 43 cases incl. Hebrew, grounding check, 3 repeats, Sonnet 5.5, prompt 1.4.0 | 43/43, exit 0, 1.10 USD | in_scope 28/28, off_topic 3/3, injection 3/3, false_positive 3/3, followup 6/6 | claude-sonnet-5-5 x105, jev-1.14.0 x9 |
+| `v10-anthropic-down` | 43 cases with `--down anthropic`, grounding check, prompt 1.4.0 | 43/43, exit 0, 0.08 USD | in_scope 28/28, off_topic 3/3, injection 3/3, false_positive 3/3, followup 6/6 | gemini-2.5-flash x35, jev-1.14.0 x3 |
 
 The `v3-anthropic-down` run proves fallback end to end: with Anthropic dropped from the chain and OpenAI answering
 429, every case was served by Gemini 2.5 Flash, including all in_scope cases. Guard decisions are recorded per run
@@ -185,8 +185,8 @@ The `v3-anthropic-down` run proves fallback end to end: with Anthropic dropped f
 
 The v10 reports add a grounding check (every score, day count or percentage in an answer must appear in that
 turn's tool results, earlier turns' results or the stated data facts), guardrail metrics and latency
-percentiles. `v10-baseline`: 0 ungrounded runs, false-positive rate 0%, miss rate 0%, latency p50 5392 ms / p95 10526 ms; one follow-up run of 129 was flaky (exit 2) and is listed in the report.
-`v10-anthropic-down`: 0 ungrounded runs, 43/43 served by Gemini 2.5 Flash, p50 10619 ms.
+percentiles. `v10-baseline` (prompt 1.4.0): 0 ungrounded runs across 129, false-positive rate 0%, miss rate 0%, latency p50 5312 ms / p95 11750 ms.
+`v10-anthropic-down`: 0 ungrounded runs, 43/43 served by Gemini 2.5 Flash, p50 10790 ms.
 
 Sample answers from the baseline (abridged), every number from a tool:
 

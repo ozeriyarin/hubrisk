@@ -80,6 +80,7 @@ async def test_criterion_2_turn_carries_tool_results_but_api_does_not(config, pr
     ("1. Minneapolis 42.3 days\n2. Chicago 13.4 days", '{"rows": [42.3, 13.4]}', []),
     ("Dallas scores 21.68, driven by rain at 15.9 days (12.72 weighted).", '{"overall": 21.68, "rain": 15.9}', ["12.72"]),
     ("Houston is higher by 12.3 days; the trend is 5.8 lower.", '{"difference": -12.3, "trend": -5.8}', []),
+    ("Snow and cold together contribute 0.34.", '{"snow": 0.2, "cold": 0.14, "weight": 0.3}', ["0.34"]),
     ("Roughly 50 days a year, about 14%.", '{"mean": 14.0}', ["50"]),
 ])
 def test_criterion_3_grounding_check(answer, tool, missing):

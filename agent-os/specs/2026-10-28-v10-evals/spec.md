@@ -17,13 +17,17 @@ table. **Out:** prompts, models, tools, pages.
 
 1. `evals/cases.yaml` has at least 40 cases across the five categories, two questions in Hebrew, and each of the four assignment questions carries a numeric `must_contain` that the engine returns for that question.
 2. `Turn.tool_results` holds the serialized tool outputs of the turn and is excluded from the API response; `Service.ask` fills it.
-3. `ungrounded_numbers(answer, pool)` flags decimals, percentages and day counts absent from the grounding pool (within rounding, sign-insensitive so a tool difference of −12.3 grounds "12.3"), ignores years and list markers, and returns nothing when the pool is empty; the pool is this turn's tool outputs plus earlier turns' outputs in the same conversation plus the data facts the prompt stated (`Turn.facts`); `check` reports ungrounded numbers as a failure reason and the report lists them per case.
+3. `ungrounded_numbers(answer, pool)` flags decimals, percentages and day counts absent from the grounding pool (within rounding: 0.051 for values of 1 or more, 0.0051 below 1 so a summed 0.34 cannot match a weight of 0.3; sign-insensitive so a tool difference of −12.3 grounds "12.3"), ignores years and list markers, and returns nothing when the pool is empty; the pool is this turn's tool outputs plus earlier turns' outputs in the same conversation plus the data facts the prompt stated (`Turn.facts`); `check` reports ungrounded numbers as a failure reason and the report lists them per case.
 4. `Report` computes the guardrail false-positive rate, miss rate and `decided_by` counts, and the Markdown prints them.
 5. `Report` computes latency p50 and p95 and the Markdown has a per-case table with passes, mean cost, p50 latency and ungrounded count.
 6. Committed `v10-baseline` (repeat 3) and `v10-anthropic-down`: every in_scope case passes, no ungrounded number on any answered run, miss rate 0, and the README eval table lists both with per-category results.
 7. DESIGN has a worked KPI example table for one hub whose numbers match the engine (test recomputes), and the README shows the `.env.example` fields.
 
 ## Design
+
+Acceptance pass finding: a live "why" answer summed two negligible contributions (0.2 + 0.14 = 0.34), a number no
+tool returned, and the checker's tolerance let it match the heat weight 0.3. Prompt 1.4.0 forbids combining tool
+numbers; the tolerance below 1 is 0.0051; both reports were rerun.
 
 - **Tool results on the turn:** `Service.ask` collects `ToolReturnPart.model_response_str()` for every tool
   return in the new messages into `Turn.tool_results` (`exclude=True`, so `/api/chat` is unchanged).

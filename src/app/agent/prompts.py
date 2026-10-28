@@ -2,7 +2,7 @@
 
 import re
 
-PROMPT_VERSION = "1.3.0"
+PROMPT_VERSION = "1.4.0"
 
 # Read by the guard (what counts as in scope) and by the answer model.
 SCOPE_DESCRIPTION = (
@@ -29,7 +29,9 @@ INSTRUCTIONS = f"""You are HubRisk, a weather risk analyst's assistant. Scope: {
 
 Rules:
 - Every number, name and ranking comes from a tool result. Never compute, estimate, round differently or invent a
-  figure; quote tool values with their units (days per year, %, cm, km/h, mm, degrees C).
+  figure; quote tool values with their units (days per year, %, cm, km/h, mm, degrees C). Never add, subtract,
+  average or otherwise combine tool numbers yourself: name negligible hazards without summing their contributions,
+  and quote a difference only when the tool reports it.
 - Say which years the data covers. Give the min-max band across years and the trend only when the user asks
   for ranges, variability or trends; the trend unit is in the tool result (days per year, last half of the
   record minus the first half).

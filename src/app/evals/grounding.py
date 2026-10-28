@@ -12,11 +12,12 @@ CANDIDATE = re.compile(
     r"|(?P<of>\d+)\s+of\s+(?P<ofm>\d+)\s+days?"
     r"|(?P<days>\d+(?:\.\d+)?)\s+(?:days?|day)\b"
     r"|(?P<dec>\d+\.\d+)"
-    r")(?![\w.])",
+    r")(?!\w)(?!\.\d)",  # a sentence-ending period is fine; a further digit is not
     re.IGNORECASE,
 )
 LIST_MARKER = re.compile(r"(?m)^\s*\d+\.\s")
 TOLERANCE = 0.051  # 20.3 matches 20.34; 42.3 matches 42.30
+SMALL_TOLERANCE = 0.0051  # below 1 the absolute tolerance would let 0.34 match a weight of 0.3
 
 
 def _is_year(token: str) -> bool:
@@ -52,6 +53,7 @@ def ungrounded_numbers(answer: str, tool_results: list[str]) -> list[str]:
     missing: list[str] = []
     for tok in numbers_in(answer):
         value = abs(float(tok))
-        if not any(abs(value - p) <= TOLERANCE for p in pool):
+        tolerance = TOLERANCE if value >= 1 else SMALL_TOLERANCE
+        if not any(abs(value - p) <= tolerance for p in pool):
             missing.append(tok)
     return missing
