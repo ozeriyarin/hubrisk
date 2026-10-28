@@ -22,7 +22,7 @@ limitations visible while collapsing the technical fields. No new dependency, no
 4. `intro_reply` returns the intro for greetings and capability questions (`hi`, `Hello!`, `what can you do?`, `What can you help me with`, `help`) and `None` for real questions, including ones that start with a greeting.
 5. `Service.ask` answers an intro turn with status `answered`, `guardrail="intro"`, no tool, zero cost and no ledger row; the answer lists the four example questions.
 6. Both eval sets contain `greet-hi` and `greet-what-can-you-do` expecting `answered` with "midwest" in the answer; `agent eval --test` exits 0.
-7. The page renders limitations outside the toggle and model, tools, cost and latency inside a `<details>` element (sources moved into the toggle by the v6 follow-up); the page contains no slash-command handling.
+7. The page renders model, tools, cost and latency inside a `<details>` element (which layout of sources and limitations is current is set by the v6 spec, round 2: sources visible, limitations in the toggle); the page contains no slash-command handling.
 8. `evals/results/v5-baseline.json` is committed for `PROMPT_VERSION` 1.2.0 with every in_scope case passed and no run over `max_chars`; the README verification record is refreshed after the deploy.
 
 ## Design
