@@ -17,7 +17,7 @@ table. **Out:** prompts, models, tools, pages.
 
 1. `evals/cases.yaml` has at least 40 cases across the five categories, two questions in Hebrew, and each of the four assignment questions carries a numeric `must_contain` that the engine returns for that question.
 2. `Turn.tool_results` holds the serialized tool outputs of the turn and is excluded from the API response; `Service.ask` fills it.
-3. `ungrounded_numbers(answer, tool_results)` flags decimals, percentages and day counts absent from the tool results (within rounding), ignores years and list markers, and returns nothing when there are no tool results; `check` reports them as a failure reason and the report lists them per case.
+3. `ungrounded_numbers(answer, pool)` flags decimals, percentages and day counts absent from the grounding pool (within rounding, sign-insensitive so a tool difference of −12.3 grounds "12.3"), ignores years and list markers, and returns nothing when the pool is empty; the pool is this turn's tool outputs plus earlier turns' outputs in the same conversation plus the data facts the prompt stated (`Turn.facts`); `check` reports ungrounded numbers as a failure reason and the report lists them per case.
 4. `Report` computes the guardrail false-positive rate, miss rate and `decided_by` counts, and the Markdown prints them.
 5. `Report` computes latency p50 and p95 and the Markdown has a per-case table with passes, mean cost, p50 latency and ungrounded count.
 6. Committed `v10-baseline` (repeat 3) and `v10-anthropic-down`: every in_scope case passes, no ungrounded number on any answered run, miss rate 0, and the README eval table lists both with per-category results.

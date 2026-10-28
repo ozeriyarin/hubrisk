@@ -38,3 +38,6 @@ class Turn(BaseModel):
     cache_write_tokens: int = 0
     cost_usd: float = 0.0
     latency_ms: int = 0
+    tool_results: list[str] = Field(default_factory=list, exclude=True)  # for the eval grounding check, not the API
+    facts: str = Field(default="", exclude=True)  # the dynamic data facts the prompt stated this turn
+    tool_results: list[str] = Field(default_factory=list, exclude=True)  # for the eval grounding check, not the API

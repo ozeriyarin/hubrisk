@@ -108,6 +108,23 @@ render.yaml    Render Blueprint (python runtime, uv sync --frozen --no-dev, /hea
 - **Sessions: in memory** (1 h TTL, LRU 500). A restart forgets conversations; acceptable for an analyst tool
   at this scale and stated in the README.
 
+## Worked KPI example: Dallas
+
+Expected disruption days per year per hazard over the complete years 2016–2025, weighted into the overall score
+(scoring 1.0.0). Every figure below is what `hub_score("dallas")` returns.
+
+| hazard | rule | mean days/year | weight | contribution |
+|---|---|---|---|---|
+| rain | precip_mm >= 25 | 15.9 | 0.8 | 12.72 |
+| wind | gust_kmh >= 70 | 4.9 | 1.0 | 4.90 |
+| heat | tmax_c >= 38 | 12.4 | 0.3 | 3.72 |
+| snow | snow_cm >= 5 | 0.2 | 1.0 | 0.20 |
+| cold | tmin_c <= -15 | 0.2 | 0.7 | 0.14 |
+| **overall** | weighted sum | | | **21.68** |
+
+Each hazard also carries its per-year counts, min, max, standard deviation and trend; the "why" answer quotes
+the contributions in this order and offers the full breakdown.
+
 ## Deployment
 
 - **Where:** Render web service from `render.yaml` (Blueprint), python runtime, free plan. Build

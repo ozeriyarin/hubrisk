@@ -43,6 +43,10 @@ Order is fixed: spec → code + tests → ruff → pytest → eval report (when 
 - **v9 cost** (2026-10-28, spec `agent-os/specs/2026-10-28-v9-cost`): Anthropic prompt caching of the static
   prefix, cache tokens in turns and reports, `agent eval --model` experiments, measured baseline and Haiku run.
 
+- **v10 evals** (2026-10-28, spec `agent-os/specs/2026-10-28-v10-evals`): 41-case set with engine numbers and
+  Hebrew questions, grounding check, guardrail metrics, latency percentiles and per-case cost, fresh baseline
+  (repeat 3) and Anthropic-down reports, worked KPI example in DESIGN.
+
 ## Phase 1: MVP (must ship)
 
 1. ~~v0 platform~~ shipped.

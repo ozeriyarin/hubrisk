@@ -17,7 +17,39 @@ uv run agent chat --test "What can you help me with?"   # offline, no key, no sp
 uv run agent serve --test                                # http://localhost:8000
 ```
 
-With real models, copy `.env.example` to `.env` and set at least one vendor key (`ANTHROPIC_API_KEY` recommended;
+With real models, copy `.env.example` to `.env`:
+
+```
+# Copy to .env (gitignored). Only the keys you have; a missing key removes that model from the chain.
+
+# Primary vendor (Claude Sonnet primary, Claude Haiku same-vendor fallback and guard fallback).
+ANTHROPIC_API_KEY=
+# Cross-vendor fallbacks, in config/agent.yaml order. Optional.
+OPENAI_API_KEY=
+GOOGLE_API_KEY=
+OPENROUTER_API_KEY=
+# TypeSafe Jev decision model for the guardrail. Optional; without it the guard runs on Haiku alone.
+TYPESAFE_API_KEY=
+
+# Hard monthly spend cap in USD, enforced in code before every paid call. Mirror it in each provider console.
+BUDGET_USD=5
+# SQLite ledger (spend) and sessions. On Render this is ephemeral unless a disk is attached.
+DB_PATH=data/agent.db
+# Shared secret for /api/stats and session resets when exposed publicly. Empty = open (local only).
+ADMIN_TOKEN=
+# Offline demo: every model call is answered by Pydantic AI's TestModel, no key, no spend.
+# MODEL_MODE=test
+
+# Data layer
+# NWS_USER_AGENT=hubrisk/0.1 (your-contact@example.com)
+# SNAPSHOT_DIR=data/snapshots
+
+# Alerts (bonus): webhook for live-risk changes and the in-process check interval (0 = off)
+# ALERT_WEBHOOK_URL=https://example.com/hook
+# ALERT_INTERVAL_MIN=30
+```
+
+Set at least one vendor key (`ANTHROPIC_API_KEY` recommended;
 `OPENAI_API_KEY`, `GOOGLE_API_KEY`, `OPENROUTER_API_KEY`, `TYPESAFE_API_KEY` optional). A model whose key is
 missing is skipped at startup. Then:
 
@@ -130,24 +162,31 @@ The LLM never produces a number: every figure comes from a tool, and answers car
 
 ## Evals
 
-`evals/cases.yaml` holds 20 live cases in five categories (in_scope with the four sample questions and two
-greetings, off_topic, injection, false_positive, followup). `evals/smoke.yaml` is the offline set CI runs.
+`evals/cases.yaml` holds 43 live cases in five categories (in_scope with the four sample questions, one hazard per
+hub, rankings, year statistics, two Hebrew questions and greetings; off_topic; injection; false_positive; followup). `evals/smoke.yaml` is the offline set CI runs.
 Reports are committed under `evals/results/`; a prompt change bumps `PROMPT_VERSION` and ships with a fresh
 baseline. Current state: every committed report passes every in_scope case; the latest full baseline is
-`v9-baseline`.
+`v10-baseline`.
 
 | report | what | result | per category | Served by |
 |---|---|---|---|---|
 | `v3-baseline` | v3 set (18 cases), 2 repeats, Sonnet 5.5, Jev guard | 18/18, exit 0, 0.77 USD | in_scope 6/6, off_topic 3/3, injection 3/3, false_positive 3/3, followup 3/3 | claude-sonnet-5-5 x24, jev-1.14.0 x6 |
-| `v3-anthropic-down` | same cases with `--down anthropic` (outage simulation) | 18/18, exit 0, 0.04 USD | in_scope 6/6, off_topic 3/3, injection 3/3, false_positive 3/3, followup 3/3 | gemini-2.5-flash x12, jev-1.14.0 x3 |
+| `v3-anthropic-down` | v3 set with `--down anthropic` (outage simulation) | 18/18, exit 0, 0.04 USD | in_scope 6/6, off_topic 3/3, injection 3/3, false_positive 3/3, followup 3/3 | gemini-2.5-flash x12, jev-1.14.0 x3 |
 | `v5-baseline` | 20 cases (v3 set + greetings), brevity check, prompt 1.2.0 | 20/20, exit 0, 0.37 USD | in_scope 8/8, off_topic 3/3, injection 3/3, false_positive 3/3, followup 3/3 | claude-sonnet-5-5 x12, jev-1.14.0 x3 |
 | `v6-baseline` | 20 cases, "why" format rules + word caps, prompt 1.3.0 | 20/20, exit 0, 0.61 USD | in_scope 8/8, off_topic 3/3, injection 3/3, false_positive 3/3, followup 3/3 | claude-sonnet-5-5 x12, jev-1.14.0 x3 |
 | `v9-baseline` | 20 cases, prompt caching on, Sonnet 5.5, config 0.3.0 | 20/20, exit 0, 0.16 USD | in_scope 8/8, off_topic 3/3, injection 3/3, false_positive 3/3, followup 3/3 | claude-sonnet-5-5 x12, jev-1.14.0 x3 |
 | `v9-haiku` | 20 cases on `--model anthropic:claude-haiku-5-5` (experiment) | 20/20, exit 0, 0.01 USD | in_scope 8/8, off_topic 3/3, injection 3/3, false_positive 3/3, followup 3/3 | claude-haiku-5-5 x12, jev-1.14.0 x3 |
+| `v10-baseline` | 43 cases incl. Hebrew, grounding check, 3 repeats, Sonnet 5.5 | 42/43, exit 2, 1.12 USD | in_scope 28/28, off_topic 3/3, injection 3/3, false_positive 3/3, followup 5/6 | claude-sonnet-5-5 x105, jev-1.14.0 x9 |
+| `v10-anthropic-down` | 43 cases with `--down anthropic`, grounding check | 43/43, exit 0, 0.09 USD | in_scope 28/28, off_topic 3/3, injection 3/3, false_positive 3/3, followup 6/6 | gemini-2.5-flash x35, jev-1.14.0 x3 |
 
 The `v3-anthropic-down` run proves fallback end to end: with Anthropic dropped from the chain and OpenAI answering
 429, every case was served by Gemini 2.5 Flash, including all in_scope cases. Guard decisions are recorded per run
 (`regex` for the deterministic layer, `jev-1.14.0` for the TypeSafe decision model).
+
+The v10 reports add a grounding check (every score, day count or percentage in an answer must appear in that
+turn's tool results, earlier turns' results or the stated data facts), guardrail metrics and latency
+percentiles. `v10-baseline`: 0 ungrounded runs, false-positive rate 0%, miss rate 0%, latency p50 5392 ms / p95 10526 ms; one follow-up run of 129 was flaky (exit 2) and is listed in the report.
+`v10-anthropic-down`: 0 ungrounded runs, 43/43 served by Gemini 2.5 Flash, p50 10619 ms.
 
 Sample answers from the baseline (abridged), every number from a tool:
 

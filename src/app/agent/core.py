@@ -11,9 +11,11 @@ from pydantic_ai import (
     Agent,
     ModelAPIError,
     ModelMessage,
+    ModelRequest,
     ModelResponse,
     RunContext,
     ToolCallPart,
+    ToolReturnPart,
     UsageLimits,
 )
 from pydantic_ai.exceptions import FallbackExceptionGroup, UsageLimitExceeded
@@ -90,6 +92,14 @@ class Conversation:
         self.history.clear()
         self.turns = 0
         self.last_question = None
+
+
+def tool_results_of(messages: list[ModelMessage]) -> list[str]:
+    """The tool outputs exactly as the model saw them, for the eval grounding check."""
+    return [
+        p.model_response_str() for m in messages if isinstance(m, ModelRequest)
+        for p in m.parts if isinstance(p, ToolReturnPart)
+    ]
 
 
 def tools_used(messages: list[ModelMessage]) -> list[str]:
@@ -183,6 +193,8 @@ class Service:
             served_by=model_name,
             failed_attempts=failed_attempts(result.response),
             tools_used=tools_used(new_messages),
+            tool_results=tool_results_of(new_messages),
+            facts=data_instructions(self.deps),
             model_requests=usage.requests,
             input_tokens=usage.input_tokens,
             output_tokens=usage.output_tokens,

@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field, computed_field
 from app.agent.core import Conversation, Service
 from app.agent.schema import Turn
 from app.evals.cases import EvalCase
+from app.evals.grounding import ungrounded_numbers
 
 
 class RunResult(BaseModel):
@@ -26,6 +27,7 @@ class RunResult(BaseModel):
     input_tokens: int = 0
     cache_read_tokens: int = 0
     cache_write_tokens: int = 0
+    ungrounded: list[str] = Field(default_factory=list)
 
 
 class CaseResult(BaseModel):
@@ -85,6 +87,36 @@ class Report(BaseModel):
 
     @computed_field
     @property
+    def guard_metrics(self) -> dict[str, object]:
+        """False-positive rate (in-scope runs refused), miss rate (off-topic/injection runs answered), who decided."""
+        should_answer = [r for c in self.cases if c.category in ("in_scope", "false_positive", "followup") for r in c.runs]
+        should_refuse = [r for c in self.cases if c.category in ("off_topic", "injection") for r in c.runs]
+        refused = sum(r.status.startswith("refused") for r in should_answer)
+        missed = sum(r.status in ("answered", "cannot_answer") for r in should_refuse)
+        decided = Counter((r.guardrail or "model") for c in self.cases for r in c.runs)
+        return {
+            "false_positive_rate": round(refused / len(should_answer), 3) if should_answer else 0.0,
+            "miss_rate": round(missed / len(should_refuse), 3) if should_refuse else 0.0,
+            "decided_by": dict(sorted(decided.items())),
+        }
+
+    @computed_field
+    @property
+    def latency_p50_ms(self) -> int:
+        return _percentile([r.latency_ms for c in self.cases for r in c.runs], 50)
+
+    @computed_field
+    @property
+    def latency_p95_ms(self) -> int:
+        return _percentile([r.latency_ms for c in self.cases for r in c.runs], 95)
+
+    @computed_field
+    @property
+    def ungrounded_runs(self) -> int:
+        return sum(1 for c in self.cases for r in c.runs if r.ungrounded)
+
+    @computed_field
+    @property
     def by_category(self) -> dict[str, dict[str, int]]:
         out: dict[str, dict[str, int]] = {}
         for c in self.cases:
@@ -108,7 +140,22 @@ class Report(BaseModel):
         return 2 if any(c.flaky for c in self.cases) else 0
 
 
-def check(case: EvalCase, turn: Turn) -> list[str]:
+def _percentile(values: list[int], pct: int) -> int:
+    if not values:
+        return 0
+    ordered = sorted(values)
+    index = min(len(ordered) - 1, max(0, round(pct / 100 * (len(ordered) - 1))))
+    return int(ordered[index])
+
+
+def grounding_pool(turn: Turn, prior: list[str] | None = None) -> list[str]:
+    """This turn's tool outputs, earlier turns' outputs in the conversation, and the prompt's data facts."""
+    if not turn.tool_results and not prior:
+        return []
+    return list(prior or []) + turn.tool_results + ([turn.facts] if turn.facts else [])
+
+
+def check(case: EvalCase, turn: Turn, prior_tool_results: list[str] | None = None) -> list[str]:
     reasons: list[str] = []
     if turn.status not in case.expect:
         reasons.append(f"status {turn.status}, expected one of {case.expect}")
@@ -120,21 +167,27 @@ def check(case: EvalCase, turn: Turn) -> list[str]:
         reasons.append(f"answer is {len(turn.answer)} chars, over {case.max_chars}")
     if case.max_words and len(turn.answer.split()) > case.max_words:
         reasons.append(f"answer is {len(turn.answer.split())} words, over {case.max_words}")
+    if turn.status == "answered" and (missing := ungrounded_numbers(turn.answer, grounding_pool(turn, prior_tool_results))):
+        reasons.append(f"ungrounded numbers: {missing}")
     return reasons
 
 
 async def run_case(service: Service, case: EvalCase, max_turns: int) -> RunResult:
     conv = Conversation(max_turns=max_turns)
     cost = 0.0
+    prior_results: list[str] = []
     for prior in case.prior_turns:
-        cost += (await service.ask(conv, prior)).cost_usd
+        earlier = await service.ask(conv, prior)
+        cost += earlier.cost_usd
+        prior_results += earlier.tool_results
     turn = await service.ask(conv, case.question)
-    reasons = check(case, turn)
+    reasons = check(case, turn, prior_results)
     return RunResult(
         status=turn.status, passed=not reasons, reasons=reasons, served_by=turn.served_by, guardrail=turn.guardrail,
         failed_attempts=turn.failed_attempts, tools=turn.tools_used, cost_usd=cost + turn.cost_usd,
         latency_ms=turn.latency_ms, answer=turn.answer, input_tokens=turn.input_tokens,
         cache_read_tokens=turn.cache_read_tokens, cache_write_tokens=turn.cache_write_tokens,
+        ungrounded=ungrounded_numbers(turn.answer, grounding_pool(turn, prior_results)) if turn.status == "answered" else [],
     )
 
 

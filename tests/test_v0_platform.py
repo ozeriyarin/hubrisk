@@ -198,7 +198,7 @@ def test_criterion_10_health_and_chat_contract(service, budget):
     assert h["models"] == ["fake"] and h["guard"] == "fake-guard"
     r = c.post("/api/chat", json={"message": "hi"}).json()
     assert r["status"] == "answered" and r["session_id"] and r["session_reset"] is False
-    assert set(Turn.model_fields) <= set(r)
+    assert {k for k, f in Turn.model_fields.items() if not f.exclude} <= set(r)  # tool_results is eval-only
     assert c.post("/api/chat", json={"message": "hi", "session_id": "gone"}).json()["session_reset"] is True
     assert c.post("/api/chat", json={"message": ""}).status_code == 422
 
