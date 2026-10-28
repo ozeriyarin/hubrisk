@@ -12,6 +12,7 @@
   .meta details { margin-top: 4px; } .meta summary { cursor: pointer; color: var(--muted); }
   body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.45 system-ui, sans-serif; }
   main { max-width: 760px; margin: 0 auto; padding: 16px; display:flex; flex-direction:column; min-height:100vh; }
+  #tagline { color: var(--muted); font-size: 14px; margin-top: 2px; }
   header { display:flex; justify-content:space-between; align-items:baseline; gap:12px; margin-bottom:12px; }
   h1 { font-size:18px; margin:0; }
   #status { color:var(--muted); font-size:13px; }
@@ -29,7 +30,7 @@
 </head>
 <body>
 <main>
-  <header><h1 id="title">Agent</h1><span id="status">…</span></header>
+  <header><div><h1 id="title">HubRisk agent</h1><div id="tagline">Weather disruption risk across the US hub network</div></div><span id="status"></span></header>
   <div id="log"></div>
   <form id="f"><input id="q" autocomplete="off" placeholder="Ask a question" maxlength="2000" required><button id="send">Send</button></form>
 </main>
@@ -37,7 +38,8 @@
   const log = document.getElementById('log'), q = document.getElementById('q'), send = document.getElementById('send');
   let sessionId = null;
   fetch('/health').then(r => r.json()).then(h => {
-    document.getElementById('status').textContent = `v${h.version} · ${h.models.join(' → ')} · guard: ${h.guard}`;
+    // Operator detail (version, models, guard) stays on /health; the header only flags an unhealthy service.
+    document.getElementById('status').textContent = h.status === 'ok' ? '' : 'status: ' + h.status;
   }).catch(() => document.getElementById('status').textContent = 'offline');
   function add(cls, text, meta) {
     const d = document.createElement('div'); d.className = 'msg ' + cls; d.textContent = text;

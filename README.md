@@ -51,6 +51,8 @@ uv run agent ingest
 
 ## Chat page
 
+The header reads "HubRisk agent" with the tagline "Weather disruption risk across the US hub network";
+version, model chain and guard live on `/health` and in each answer's details toggle.
 A greeting or "what can you do?" gets an instant intro with the four example questions, without a model call.
 Answers lead with the ranking or the number and stay short (a schema cap and an eval check enforce it). Every
 answer shows its sources and limitations; model, tools, cost and latency sit behind a `details` toggle.
