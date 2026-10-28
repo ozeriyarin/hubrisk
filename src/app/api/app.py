@@ -13,6 +13,7 @@ from pydantic import BaseModel, Field
 from app import __version__
 from app.agent.core import Service
 from app.agent.schema import Turn
+from app.alerts import AlertService, Change, LiveRisk
 from app.api.ratelimit import RateLimiter
 from app.api.sessions import SessionStore
 from app.data.store import DataSummary
@@ -56,7 +57,7 @@ def create_app(
     model_names: list[str],
     guard_name: str,
     limiter: RateLimiter | None = None,
-    admin_token: str | None = None, data: DataSummary | None = None,
+    admin_token: str | None = None, data: DataSummary | None = None, alerts: AlertService | None = None,
 ) -> FastAPI:
     app = FastAPI(title="hubrisk", version=__version__, docs_url="/api/docs", openapi_url="/api/openapi.json", redoc_url=None)
 
@@ -98,6 +99,19 @@ def create_app(
     async def stats(authorization: str | None = Header(default=None)) -> Stats:
         require_admin(authorization)
         return budget.stats()
+
+    @app.get("/api/alerts", response_model=list[LiveRisk])
+    async def alerts_current() -> list[LiveRisk]:
+        """Last stored live risk level per hub (none / watch / warning / unavailable)."""
+        return alerts.current() if alerts else []
+
+    @app.post("/api/alerts/run", response_model=list[Change])
+    async def alerts_run(authorization: str | None = Header(default=None)) -> list[Change]:
+        """Run one live-risk check now (webhook-triggered); returns the hubs whose level changed."""
+        require_admin(authorization)
+        if alerts is None:
+            raise HTTPException(status_code=503, detail="alerts not configured")
+        return await alerts.run()
 
     @app.get("/", include_in_schema=False)
     async def index() -> FileResponse:

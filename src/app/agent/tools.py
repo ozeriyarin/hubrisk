@@ -15,6 +15,7 @@ from pydantic_ai.toolsets import FunctionToolset
 
 from app import __version__
 from app.agent.prompts import SCOPE_DESCRIPTION
+from app.alerts import LiveRisk, assess
 from app.data.hubs import Hub, HubRegistry
 from app.data.nws import Alert, ForecastPeriod, Live, NWSClient
 from app.data.store import Store
@@ -71,6 +72,7 @@ class CurrentConditions(BaseModel):
     name: str
     alerts: Live[Alert]
     forecast: Live[ForecastPeriod]
+    live_risk: LiveRisk | None = Field(default=None, description="deterministic live level: none/watch/warning, with drivers")
     note: str = "live NWS data; reported beside the historical score, never blended into it"
 
 
@@ -160,7 +162,8 @@ async def _current(deps: ToolContext, hub: str) -> CurrentConditions | NotFound 
         return h
     if deps.nws is None:
         return Unavailable(reason="live weather client not configured")
-    return CurrentConditions(hub_id=h.id, name=h.name, alerts=await deps.nws.alerts(h), forecast=await deps.nws.forecast(h))
+    alerts, forecast = await deps.nws.alerts(h), await deps.nws.forecast(h)
+    return CurrentConditions(hub_id=h.id, name=h.name, alerts=alerts, forecast=forecast, live_risk=assess(h.id, alerts, forecast))
 
 
 def _list(deps: ToolContext) -> HubList | Unavailable:

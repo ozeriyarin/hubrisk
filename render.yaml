@@ -28,5 +28,9 @@ services:
         generateValue: true
       - key: DB_PATH
         value: /tmp/agent.db
+      - key: ALERT_INTERVAL_MIN
+        value: "30"
+      - key: ALERT_WEBHOOK_URL
+        sync: false
       - key: NWS_USER_AGENT
         value: "hubrisk/0.1 (github.com/ozeriyarin/hubrisk)"

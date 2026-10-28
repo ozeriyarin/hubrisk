@@ -118,6 +118,14 @@ render.yaml    Render Blueprint (python runtime, uv sync --frozen --no-dev, /hea
   a background worker for the alert schedule, structured logs shipped somewhere, and a paid instance so the
   service never sleeps.
 
+## Alerts (`app/alerts.py`)
+
+`assess` turns NWS alerts and forecast into a level (none/watch/warning) with the drivers that fired;
+`AlertStore` keeps the last level per hub in the SQLite file; `run_check` diffs and hands changes to
+`WebhookNotifier`; `Scheduler` runs the check in-process on an interval, and a GitHub Actions cron hits
+`POST /api/alerts/run` as the second trigger. The level is also returned by the `current_conditions` tool. The
+historical KPI is untouched: live risk is a separate signal, as the scoring standard requires.
+
 ## Trade-offs and known limits
 
 - Thresholds are plausible operational limits, not calibrated to real outage data (none available).

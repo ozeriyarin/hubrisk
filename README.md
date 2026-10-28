@@ -55,7 +55,8 @@ The header reads "HubRisk agent" with the tagline "Weather disruption risk acros
 version, model chain and guard live on `/health` and in each answer's details toggle.
 A greeting or "what can you do?" gets an instant intro with the four example questions, without a model call.
 Answers lead with the ranking or the number and stay short (a schema cap and an eval check enforce it). Every
-answer shows its sources and limitations; model, tools, cost and latency sit behind a `details` toggle.
+answer shows its limitations; sources, model, tools, cost and latency sit behind a `details` toggle. "Why"
+answers lead with the score and the main driver, list only the material hazards, and offer the full breakdown.
 
 ## API
 
@@ -64,6 +65,25 @@ answer shows its sources and limitations; model, tools, cost and latency sit beh
   `limitations`, `served_by`, `failed_attempts`, `tools_used`, cost and latency.
 - `DELETE /api/sessions/{id}` — forget a conversation.
 - `GET /api/stats` — budget cap, month-to-date spend and recent calls (Bearer `ADMIN_TOKEN`).
+
+## Alerts (bonus)
+
+A deterministic **live risk level** per hub (none / watch / warning) comes from NWS active alerts (severity
+Severe or Extreme → warning, otherwise watch, hazard matched by event name) plus the 7-day forecast (≥ 70%
+chance of snow, storms or heavy rain adds a watch). It is reported beside the historical score, never blended
+into it. A scheduled check stores the level and posts a JSON webhook to `ALERT_WEBHOOK_URL` when a hub's level
+changes:
+
+```bash
+uv run agent alerts-check                       # one pass, prints every hub's level
+curl -X POST https://hubrisk.onrender.com/api/alerts/run -H "Authorization: Bearer $ADMIN_TOKEN"   # webhook-triggered
+curl https://hubrisk.onrender.com/api/alerts     # current levels
+```
+
+Two triggers: the service runs the check every `ALERT_INTERVAL_MIN` minutes (30 on Render), and
+`.github/workflows/alerts.yml` calls the run endpoint every 30 minutes when the `ALERTS_URL` and `ALERTS_TOKEN`
+secrets are set (this also wakes the free-tier instance). State lives in the ephemeral SQLite file: after a
+restart the first check records a baseline and alerts nothing.
 
 ## Spend limits (both are required)
 
@@ -110,6 +130,7 @@ injection, false_positive, followup). `evals/smoke.yaml` is the offline set CI r
 |---|---|---|
 | `v3-baseline` | all 18 cases, 2 repeats, Sonnet 5.5 with Jev guard | 18/18 passed, exit 0, 0.77 USD |
 | `v5-baseline` | 20 cases (v3 set + two greetings), brevity check on, prompt 1.2.0 | 20/20 passed, exit 0, 0.37 USD |
+| `v6-baseline` | 20 cases, "why" format rules + word caps, prompt 1.3.0, config 0.2.2 | 20/20 passed, exit 0, 0.61 USD |
 | `v3-anthropic-down` | same cases with `--down anthropic` (outage simulation) | 18/18 passed, exit 0, 0.04 USD; OpenAI answered 429 and every run fell over to Gemini 2.5 Flash |
 
 Sample answers from the baseline (abridged), every number from a tool:

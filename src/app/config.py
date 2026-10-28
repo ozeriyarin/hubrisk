@@ -77,6 +77,8 @@ class Settings(BaseSettings):
     port: int = 8000
     nws_user_agent: str = "hubrisk/0.1 (github.com/ozeriyarin/hubrisk)"  # NWS requires an identifying UA
     snapshot_dir: Path = Path("data/snapshots")
+    alert_webhook_url: str | None = None  # POST target for live-risk changes; unset = log only
+    alert_interval_min: int = Field(default=0, ge=0)  # 0 disables the in-process scheduled check
 
     def key_for(self, model_name: str) -> str | None:
         """The vendor key a Pydantic AI model string needs, or None when it is not set."""

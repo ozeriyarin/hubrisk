@@ -30,7 +30,11 @@ Order is fixed: spec → code + tests → ruff → pytest → eval report (when 
   behind a toggle, baseline `v5-baseline`.
 
 - **v6 header polish** (2026-10-28, spec `agent-os/specs/2026-10-28-v6-header-polish`): header shows
-  "HubRisk agent" and the tagline instead of version and model chain.
+  "HubRisk agent" and the tagline instead of version and model chain; follow-up from live testing: "why" answer
+  format and word caps (prompt 1.3.0, baseline `v6-baseline`), sources collapsed into the details toggle.
+
+- **v7 alerts** (2026-10-28, spec `agent-os/specs/2026-10-28-v7-alerts`): live risk level per hub from NWS,
+  scheduled check + webhook on change, `agent alerts-check`, `/api/alerts`, GitHub Actions cron trigger.
 
 ## Phase 1: MVP (must ship)
 
@@ -42,8 +46,7 @@ Order is fixed: spec → code + tests → ruff → pytest → eval report (when 
 
 ## Phase 2: Post-launch (bonus, only if time remains)
 
-6. **v7 alerts** — scheduled job recomputes current-risk score per hub from NWS alerts/forecast and fires a webhook
-   when a hub's score crosses a band.
+6. ~~v7 alerts~~ shipped.
 7. **v8 voice** — browser speech-to-text and text-to-speech in the chat page.
 8. **FEMA NRI** — county-level hurricane/flood risk as a secondary signal in the KPI.
 

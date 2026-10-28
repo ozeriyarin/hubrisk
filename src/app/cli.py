@@ -6,6 +6,7 @@ import asyncio
 import logging
 import os
 import sys
+from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
@@ -17,6 +18,7 @@ from dotenv import load_dotenv
 from app.agent import prompts
 from app.agent.core import Conversation, Service, build_agent
 from app.agent.tools import ToolContext
+from app.alerts import AlertService, AlertStore, Scheduler, WebhookNotifier
 from app.api.app import create_app
 from app.api.ratelimit import RateLimiter
 from app.api.sessions import SessionStore
@@ -56,6 +58,7 @@ class App:
     model_names: list[str]
     guard_name: str
     store: Store | None = None
+    alerts: AlertService | None = None
 
 
 def compose(*, model_mode: str | None = None, down: list[str] | None = None) -> App:
@@ -94,7 +97,8 @@ def compose(*, model_mode: str | None = None, down: list[str] | None = None) -> 
         product_name=config.name, hubs=registry, store=store, nws=NWSClient(live_http, settings.nws_user_agent), engine=engine
     )
     service = Service(build_agent(chain.model), Guard(guard_model), budget, config.limits, prices, deps)
-    return App(settings, config, service, budget, chain.names, guard_name, store)
+    alerts = AlertService(registry, deps.nws, AlertStore(settings.db_path), WebhookNotifier(settings.alert_webhook_url))
+    return App(settings, config, service, budget, chain.names, guard_name, store, alerts)
 
 
 def default_cases(test: bool) -> Path:
@@ -122,8 +126,29 @@ def serve(host: str = "0.0.0.0", port: int | None = None, test: bool = TEST_FLAG
         guard_name=app.guard_name,
         limiter=RateLimiter(per_ip_per_hour=app.config.limits.per_ip_per_hour, global_per_day=app.config.limits.global_per_day),
         admin_token=app.settings.admin_token,
+        alerts=app.alerts,
     )
+    if app.settings.alert_interval_min > 0 and app.alerts:
+        attach_scheduler(web, app.alerts, app.settings.alert_interval_min * 60)
     uvicorn.run(web, host=host, port=port or app.settings.port)
+
+
+def attach_scheduler(web, alerts: AlertService, interval_s: float) -> Scheduler:
+    """Start the periodic live-risk check with the app and stop it on shutdown."""
+    scheduler = Scheduler(alerts.run, interval_s)
+    inner = web.router.lifespan_context
+
+    @asynccontextmanager
+    async def lifespan(app):
+        scheduler.start()
+        try:
+            async with inner(app) as state:
+                yield state
+        finally:
+            await scheduler.stop()
+
+    web.router.lifespan_context = lifespan
+    return scheduler
 
 
 @cli.command()
@@ -199,6 +224,19 @@ def ingest(start: str = "2016-01-01", end: str = "2025-12-31", hub: list[str] = 
 
     m = asyncio.run(run())
     typer.echo(f"snapshot written to {out_dir}: {m.hubs} hubs, {m.rows} rows, {m.start}..{m.end}")
+
+
+@cli.command("alerts-check")
+def alerts_check(test: bool = TEST_FLAG) -> None:
+    """Run one live-risk check over every hub and print the current levels (webhook on changes)."""
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+    app = compose(model_mode="test" if test else None)
+    assert app.alerts is not None
+    changes = asyncio.run(app.alerts.run())
+    for risk in app.alerts.current():
+        drivers = "; ".join(risk.drivers) or (risk.reason or "")
+        typer.echo(f"{risk.hub_id:12s} {risk.label:12s} {drivers}")
+    typer.echo(f"{len(changes)} change(s)")
 
 
 @cli.command()
