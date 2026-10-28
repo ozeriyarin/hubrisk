@@ -23,11 +23,13 @@
   .msg.bot.refused { border-color:var(--warn); }
   .meta { color:var(--muted); font-size:12px; margin-top:6px; }
   form { display:flex; gap:8px; margin-top:12px; position:sticky; bottom:0; background:var(--bg); padding:8px 0; }
-  input { flex:1; padding:10px 12px; border:1px solid var(--line); border-radius:8px; background:var(--card); color:var(--fg); font:inherit; }
-  button { padding:10px 14px; border:0; border-radius:8px; background:var(--accent); color:#fff; font:inherit; cursor:pointer; }
+  input { flex:1 1 auto; min-width:0; padding:10px 12px; border:1px solid var(--line); border-radius:8px; background:var(--card); color:var(--fg); font:inherit; }
+  button { flex:0 0 auto; white-space:nowrap; padding:10px 14px; border:0; border-radius:8px; background:var(--accent); color:#fff; font:inherit; cursor:pointer; }
   button:disabled { opacity:.5; }
   #footer { color: var(--muted); font-size: 13px; margin: 8px 0 0; }
-  #mic, #speak { padding: 0 10px; display:inline-flex; align-items:center; } #mic.listening, [aria-pressed="true"]#speak { background: var(--warn); }
+  #mic, #speak { padding: 0 10px; display:inline-flex; align-items:center; }
+  .msg { scroll-margin-bottom: 72px; }  /* keep the last bubble clear of the sticky input bar */
+  @media (max-width: 480px) { button { padding:10px 10px; } #mic, #speak { padding:0 8px; } } #mic.listening, [aria-pressed="true"]#speak { background: var(--warn); }
 </style>
 </head>
 <body>
@@ -51,10 +53,11 @@
     // Operator detail (version, models, guard) stays on /health; the header only flags an unhealthy service.
     document.getElementById('status').textContent = h.status === 'ok' ? '' : 'status: ' + h.status;
   }).catch(() => document.getElementById('status').textContent = 'offline');
+  function scrollToEnd() { requestAnimationFrame(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })); }
   function add(cls, text, meta) {
     const d = document.createElement('div'); d.className = 'msg ' + cls; d.textContent = text;
     if (meta) { const m = document.createElement('div'); m.className = 'meta'; m.textContent = meta; d.appendChild(m); }
-    log.appendChild(d); d.scrollIntoView({ block: 'end' }); return d;
+    log.appendChild(d); scrollToEnd(); return d;
   }
   // Voice (bonus): the browser's Web Speech API only. No dependency; the mic stays hidden when unsupported.
   const mic = document.getElementById('mic'), speak = document.getElementById('speak');
@@ -112,7 +115,8 @@
       if (j.limitations && j.limitations.length) details.appendChild(line('Limitations: ' + j.limitations.join('; ')));
       details.appendChild(line(tech.join(' · ')));
       meta.appendChild(details); pending.appendChild(meta);
-    } catch (err) { pending.textContent = 'Request failed: ' + err; pending.classList.add('refused'); }
+      scrollToEnd();
+    } catch (err) { pending.textContent = 'Request failed: ' + err; pending.classList.add('refused'); scrollToEnd(); }
     finally { send.disabled = false; q.focus(); }
   });
 </script>

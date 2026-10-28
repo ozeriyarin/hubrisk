@@ -24,6 +24,8 @@ tagline, so the first thing an analyst reads is what the tool is for.
 10. Round 2: the mic and speaker buttons use inline SVG line icons of the same size and stroke; no emoji glyphs.
 11. Round 2: the README evals section lists every committed report with cases passed per category, cost and the models that served, and states that the Anthropic-down run proves fallback.
 12. Round 2: the page has no sticky header and no theme toggle; it follows the system colour scheme.
+13. Round 3 (phone test): sending a message scrolls the page to the new bubble, and the page scrolls again once the answer and its meta are rendered; the last bubble keeps clear of the sticky input bar.
+14. Round 3 (phone test): the input bar fits the viewport on a phone: the input can shrink (`min-width:0`), the buttons never grow or wrap, and narrow screens use tighter button padding.
 
 ## Design
 

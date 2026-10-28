@@ -127,3 +127,32 @@ def test_criterion_12_no_sticky_header_no_theme_toggle():
     header_css = re.search(r"\n  header \{[^}]*\}", page).group(0)
     assert "sticky" not in header_css and "fixed" not in header_css  # the input bar may stick; the header must not
     assert "theme" not in page.lower() and "prefers-color-scheme" in page
+
+
+def page_source() -> str:
+    return (ROOT / "src" / "app" / "api" / "static" / "index.html").read_text(encoding="utf-8")
+
+
+def css_rule(page: str, selector: str) -> str:
+    """The first CSS rule body for a selector at the start of a line, e.g. 'input {'."""
+    start = page.index(NL + "  " + selector + " {")
+    return page[start: page.index("}", start)]
+
+
+NL = chr(10)
+
+
+def test_criterion_13_auto_scroll_on_send_and_answer():
+    page = page_source()
+    assert "function scrollToEnd()" in page and "document.body.scrollHeight" in page
+    assert "log.appendChild(d); scrollToEnd();" in page
+    after_meta = page[page.index("pending.appendChild(meta);"):]
+    assert "scrollToEnd();" in after_meta[:80]
+    assert ".msg { scroll-margin-bottom: 72px; }" in page
+
+
+def test_criterion_14_phone_layout_fits():
+    page = page_source()
+    input_css, button_css = css_rule(page, "input"), css_rule(page, "button")
+    assert "min-width:0" in input_css and "flex:0 0 auto" in button_css and "white-space:nowrap" in button_css
+    assert "@media (max-width: 480px)" in page
