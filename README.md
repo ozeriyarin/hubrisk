@@ -228,7 +228,7 @@ Verification record (re-run any time with `uv run agent verify https://hubrisk.o
 ```
 Verified 2026-10-28 at https://hubrisk.onrender.com
 - /health: status ok, version 0.1.0, models anthropic:claude-sonnet-5-5 -> anthropic:claude-haiku-5-5 -> openai:gpt-5.2 -> google-gla:gemini-2.5-flash, guard typesafe:jev-latest -> anthropic:claude-haiku-5-5, data 15 hubs 2016-01-01..2025-12-31
-- /api/chat: status answered, served by claude-sonnet-5-5, tools ['rank_hubs'], 7787 ms, 0.0136 USD
+- /api/chat: status answered, served by claude-sonnet-5-5, tools ['rank_hubs'], 9217 ms, 0.0134 USD
 ```
 
 - `GET /health` lists the model chain, the guard and the loaded snapshot; `POST /api/chat` answers one turn.
