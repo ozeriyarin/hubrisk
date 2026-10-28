@@ -1,0 +1,9 @@
+# USD per 1M tokens, used only when Pydantic AI's genai-prices has no price for a model.
+# Unknown models are charged the most expensive row. Verified 2026-10-28 (Anthropic: official price list;
+# OpenAI and Google: third-party price trackers, re-check before relying on them for budgeting).
+version: "0.2.0"
+claude-sonnet-5-5: {input: 2.00, output: 10.00}
+claude-haiku-5-5: {input: 0.10, output: 0.50}
+gpt-5.2: {input: 1.75, output: 14.00}
+gemini-2.5-flash: {input: 0.30, output: 2.50}
+jev-latest: {input: 0.50, output: 0.00}

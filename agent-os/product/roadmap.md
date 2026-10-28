@@ -3,11 +3,15 @@
 ~24-hour take-home. Each version is one Agent OS spec under `agent-os/specs/<date>-<slug>/` and one commit series.
 Order is fixed: spec → code + tests → ruff → pytest → eval report (when prompts/models change) → README/roadmap → commit.
 
+## Shipped
+
+- **v0 platform** (2026-10-28, spec `agent-os/specs/2026-10-28-v0-platform`): model chain + retries +
+  cross-vendor fallback, guard (Jev → Haiku, keyword double offline), budget ledger, FastAPI API + chat page,
+  sessions, rate limits, eval runner, 77 offline tests incl. 20 criterion tests, CI, Render Blueprint.
+
 ## Phase 1: MVP (must ship)
 
-1. **v0 platform** — model chain + retries + cross-vendor fallback, guard (Jev → Haiku), budget ledger, FastAPI
-   API + chat page, sessions, rate limits, eval runner, offline tests, CI, Render Blueprint. `MODEL_MODE=test`
-   keyless run.
+1. ~~v0 platform~~ shipped.
 2. **v1 hubs and data** — hub registry (`config/hubs.yaml`: 12–15 hubs, lat/lon, region, county FIPS), Open-Meteo
    archive ingest 2016–2025 into Parquet committed to the repo, DuckDB query layer, NOAA NWS client (active alerts,
    7-day forecast) with offline fakes.
