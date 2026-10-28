@@ -28,3 +28,5 @@ services:
         generateValue: true
       - key: DB_PATH
         value: /tmp/agent.db
+      - key: NWS_USER_AGENT
+        value: "hubrisk/0.1 (github.com/ozeriyarin/hubrisk)"

@@ -14,8 +14,8 @@ transcript, roadmap closeout. No runtime, prompt or model changes.
 - Free tier is enough for a demo; the README states the sleep/cold-start and ephemeral-ledger facts rather than
   hiding them. Provider-side spend limits are the backstop and are recorded with the date the owner set them.
 - `Budget` creates the parent directory of `DB_PATH` so a Render path change cannot crash startup.
-- The transcript is exported with the desktop app's own Export, unpacked as-is, with a single documented
-  redaction, and re-exported as the final step of the last version shipped so it is complete.
+- The transcript is exported with the desktop app's own Export, unpacked as-is, with two documented
+  redactions (reference repository name, owner email) and an API-key scan, and re-exported as the final step of the last version shipped so it is complete.
 
 ## Context
 

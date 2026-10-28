@@ -21,15 +21,17 @@ Order is fixed: spec → code + tests → ruff → pytest → eval report (when 
   guard context for follow-ups, live eval set (18 cases, 5 categories) + offline smoke set, baseline report 18/18,
   Anthropic-down fallback report, transport HTTP errors now fall over instead of crashing.
 
+- **v4 deploy** (2026-10-28, spec `agent-os/specs/2026-10-28-v4-deploy`): live at https://hubrisk.onrender.com
+  (Render Blueprint, free tier), `agent verify` record in the README, provider-side limits set 2026-10-28,
+  DESIGN deployment section, full session transcript under `docs/ai-session/`.
+
 ## Phase 1: MVP (must ship)
 
 1. ~~v0 platform~~ shipped.
 2. ~~v1 hubs and data~~ shipped.
 3. ~~v2 disruption KPI~~ shipped.
 4. ~~v3 agent~~ shipped.
-5. **v4 deploy** — Render live, `/health` and chat verified from the public URL, provider-side spend limits set,
-   README (run instructions, assumptions, uncertainty, scoping, live URL + verification date), `docs/DESIGN.md`
-   (architecture, repository structure, data storage choice), session transcript exported to `docs/ai-session/`.
+5. ~~v4 deploy~~ shipped.
 
 ## Phase 2: Post-launch (bonus, only if time remains)
 

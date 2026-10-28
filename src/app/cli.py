@@ -201,6 +201,60 @@ def ingest(start: str = "2016-01-01", end: str = "2025-12-31", hub: list[str] = 
     typer.echo(f"snapshot written to {out_dir}: {m.hubs} hubs, {m.rows} rows, {m.start}..{m.end}")
 
 
+@cli.command()
+def verify(url: str, timeout_s: float = 90.0) -> None:
+    """Check a deployed service: GET /health, one POST /api/chat; print a dated record; exit 1 on any failure."""
+    base = url.rstrip("/")
+
+    async def run() -> list[str]:
+        http = retrying_http_client(attempts=4, timeout_s=timeout_s, max_wait_s=30)
+        async with http:
+            health = (await http.get(f"{base}/health")).json()
+            chat = (await http.post(f"{base}/api/chat", json={"message": "What can you help me with?"})).json()
+        return check_health(health) + check_chat(chat) + [verification_record(base, health, chat)]
+
+    try:
+        lines = asyncio.run(run())
+    except (httpx2.HTTPError, ValueError) as e:
+        typer.echo(f"verify failed: {e}")
+        raise typer.Exit(code=1) from e
+    problems, record = lines[:-1], lines[-1]
+    typer.echo(record)
+    if problems:
+        typer.echo("verify failed:\n- " + "\n- ".join(problems))
+        raise typer.Exit(code=1)
+
+
+def check_health(payload: dict) -> list[str]:
+    problems = []
+    if payload.get("status") != "ok":
+        problems.append(f"health status is {payload.get('status')!r}")
+    models = payload.get("models") or []
+    if not models or models == ["test"]:
+        problems.append(f"model chain is {models!r}, expected real models")
+    data = payload.get("data") or {}
+    if data.get("hubs") != 15:
+        problems.append(f"snapshot reports {data.get('hubs')!r} hubs, expected 15")
+    return problems
+
+
+def check_chat(payload: dict) -> list[str]:
+    if payload.get("status") != "answered":
+        return [f"chat status is {payload.get('status')!r}: {str(payload.get('answer') or payload.get('detail'))[:120]}"]
+    return []
+
+
+def verification_record(base: str, health: dict, chat: dict) -> str:
+    data = health.get("data") or {}
+    return "\n".join([
+        f"Verified {date.today().isoformat()} at {base}",
+        f"- /health: status {health.get('status')}, version {health.get('version')}, models {' -> '.join(health.get('models') or [])}, "
+        f"guard {health.get('guard')}, data {data.get('hubs')} hubs {data.get('start')}..{data.get('end')}",
+        f"- /api/chat: status {chat.get('status')}, served by {chat.get('served_by')}, tools {chat.get('tools_used')}, "
+        f"{chat.get('latency_ms')} ms, {chat.get('cost_usd', 0):.4f} USD",
+    ])
+
+
 def main() -> None:
     for stream in (sys.stdout, sys.stderr):  # Windows consoles default to a legacy code page; reports use UTF-8
         if hasattr(stream, "reconfigure"):

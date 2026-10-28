@@ -21,7 +21,7 @@ AI session transcript committed under `docs/ai-session/`.
 4. `GET /health` on the live service reports `data.hubs == 15` and a non-test model chain (verified live, recorded in the README; the offline test asserts the README record exists with a URL and an ISO date).
 5. README "Deployment" names the live URL, the verification date and command output, the free-tier facts, and both spend limits with where each is set; the offline test checks these strings are present.
 6. `docs/DESIGN.md` has a Deployment section covering build, start, env vars, health probe, ephemeral disk and what production would change.
-7. `docs/ai-session/` contains the exported conversation transcript (at least one transcript file larger than 100 KB) and an index `README.md` that explains provenance and the single redaction.
+7. `docs/ai-session/` contains the exported conversation transcript (at least one transcript file larger than 100 KB) and an index `README.md` that explains provenance and lists every redaction (two: a third-party reference repository named in the handoff, and the owner's email injected by the tooling); the packaging refuses to run if anything looks like an API key.
 8. CI workflow runs ruff, pytest and the offline eval smoke on push (unchanged), and the roadmap marks v4 shipped.
 
 ## Design
@@ -31,15 +31,16 @@ AI session transcript committed under `docs/ai-session/`.
 - **`agent verify URL`** (`app/cli.py`): `GET /health` then `POST /api/chat` with "What can you help me with?"
   through `retrying_http_client` (5xx retries cover a cold start), pure `check_health(payload)` and
   `check_chat(payload)` helpers, a Markdown record with the date for the README, exit 0/1.
-- **`Budget`** creates `DB_PATH`'s parent directory, so any path Render gives it works.
+- **`Budget`** already creates `DB_PATH`'s parent directory (v0); v4 adds the test that pins it.
 - **`render.yaml`** gains `NWS_USER_AGENT` (public repo URL as contact, not a secret).
 - **README "Deployment"**: live URL, verification record, free-tier facts (15 min idle sleep, 30–60 s cold
   start, ephemeral disk so the ledger resets on redeploy), both spend limits and where they are set, redeploy =
   push to main.
 - **DESIGN "Deployment"**: build/start, env, probe, why free tier suffices for a demo, what production changes.
 - **Transcript**: the desktop app's Export of this session (zip in Downloads) unpacked into `docs/ai-session/`
-  with an index `README.md`; one redaction (a third-party reference repository named in the kickoff handoff),
-  noted in the index. Re-exported as the last step of the final version shipped.
+  with an index `README.md`; two redactions (a third-party reference repository named in the kickoff handoff,
+  and the owner's email address the tooling injects into system context), noted in the index; the packaging script
+  aborts if anything matches an API-key pattern. Re-exported as the last step of the final version shipped.
 
 ## Tasks
 

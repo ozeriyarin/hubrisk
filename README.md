@@ -118,4 +118,22 @@ Sample answers from the baseline (abridged), every number from a tool:
 
 ## Deployment
 
-Render Blueprint in `render.yaml`. Filled in with the live URL and verification date by the deploy spec (v4).
+Live at **https://hubrisk.onrender.com** (Render, free tier, Frankfurt). Deployed from `render.yaml` as a Blueprint; every push to
+main that passes CI auto-deploys.
+
+Verification record (re-run any time with `uv run agent verify https://hubrisk.onrender.com`):
+
+```
+Verified 2026-10-28 at https://hubrisk.onrender.com
+- /health: status ok, version 0.1.0, models anthropic:claude-sonnet-5-5 -> anthropic:claude-haiku-5-5 -> openai:gpt-5.2 -> google-gla:gemini-2.5-flash, guard typesafe:jev-latest -> anthropic:claude-haiku-5-5, data 15 hubs 2016-01-01..2025-12-31
+- /api/chat: status answered, served by claude-sonnet-5-5, tools ['about'], 8781 ms, 0.0202 USD
+```
+
+- `GET /health` lists the model chain, the guard and the loaded snapshot; `POST /api/chat` answers one turn.
+- Free tier: the service sleeps after 15 min idle, so the first request takes a 30–60 s cold start. The disk is
+  ephemeral: the spend ledger (`DB_PATH=/tmp/agent.db`) resets on redeploy, which is why the provider-side limits
+  below are required.
+- Spend limits in place: `BUDGET_USD=5` enforced in code (ledger + per-turn cap), and monthly caps set in the
+  Anthropic Console (Limits), Google Cloud (budget) and OpenAI (Billing limits) on 2026-10-28.
+- Secrets live only in Render's environment (`sync: false` in the Blueprint); nothing is in the repo.
+- To redeploy: push to main. To roll back: redeploy a previous commit from the Render dashboard.
