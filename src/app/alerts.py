@@ -138,18 +138,25 @@ class WebhookNotifier:
         return True
 
 
-async def run_check(registry: HubRegistry, nws: NWSClient, store: AlertStore, notifier: WebhookNotifier | None = None) -> list[Change]:
-    """Assess every hub, store, and report hubs whose level changed since the last stored check."""
+async def run_check(
+    registry: HubRegistry, nws: NWSClient, store: AlertStore, notifier: WebhookNotifier | None = None, *, force: bool = False
+) -> list[Change]:
+    """Assess every hub, store, and report hubs whose level changed since the last stored check.
+
+    `force` reports every hub as a change (previous may be unknown): a one-off way to test the webhook.
+    """
     changes: list[Change] = []
     for hub in registry.all:
         risk = assess(hub.id, await nws.alerts(hub), await nws.forecast(hub))
         previous = store.get(hub.id)
         store.put(risk)
-        if previous is None or previous.level is None or risk.level is None or previous.level == risk.level:
+        changed = previous is not None and previous.level is not None and risk.level is not None and previous.level != risk.level
+        if not (changed or force):
             continue
         change = Change(
-            hub_id=hub.id, name=hub.name, previous=previous.level, current=risk.level, previous_label=previous.label,
-            current_label=risk.label, drivers=risk.drivers, checked_at=risk.checked_at,
+            hub_id=hub.id, name=hub.name, previous=previous.level if previous else None, current=risk.level,
+            previous_label=previous.label if previous else "unknown", current_label=risk.label, drivers=risk.drivers,
+            checked_at=risk.checked_at,
         )
         changes.append(change)
         log.info("live risk changed: %s %s -> %s", hub.id, change.previous_label, change.current_label)
@@ -165,8 +172,8 @@ class AlertService:
     store: AlertStore
     notifier: WebhookNotifier
 
-    async def run(self) -> list[Change]:
-        return await run_check(self.registry, self.nws, self.store, self.notifier)
+    async def run(self, *, force: bool = False) -> list[Change]:
+        return await run_check(self.registry, self.nws, self.store, self.notifier, force=force)
 
     def current(self) -> list[LiveRisk]:
         return self.store.all()

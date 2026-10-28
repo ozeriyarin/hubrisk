@@ -6,6 +6,11 @@ on:
   schedule:
     - cron: "*/30 * * * *"
   workflow_dispatch:
+    inputs:
+      force:
+        description: report every hub as a change (one-off webhook test)
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -18,6 +23,7 @@ jobs:
         env:
           ALERTS_URL: ${{ secrets.ALERTS_URL }}
           ALERTS_TOKEN: ${{ secrets.ALERTS_TOKEN }}
+          FORCE: ${{ inputs.force || 'false' }}
         run: |
           if [ -z "$ALERTS_URL" ] || [ -z "$ALERTS_TOKEN" ]; then echo "ALERTS_URL/ALERTS_TOKEN not set, skipping"; exit 0; fi
-          curl -sf --max-time 120 -X POST "$ALERTS_URL/api/alerts/run" -H "Authorization: Bearer $ALERTS_TOKEN"
+          curl -sf --max-time 120 -X POST "$ALERTS_URL/api/alerts/run?force=$FORCE" -H "Authorization: Bearer $ALERTS_TOKEN"

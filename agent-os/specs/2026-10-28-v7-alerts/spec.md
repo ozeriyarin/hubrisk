@@ -20,7 +20,7 @@ existing SQLite file.
 
 1. `assess` maps NWS events to hazards and severities to levels (table-driven), ignores non-hazard events, adds at most level 1 from the forecast, lists drivers, and returns `level=None` with a reason when live data is unavailable.
 2. `AlertStore` persists the last level, drivers and time per hub in SQLite and returns `None` for a hub never checked.
-3. `run_check` records every hub, returns one change per hub whose level differs from the stored one, and records a baseline without changes on the first run.
+3. `run_check` records every hub, returns one change per hub whose level differs from the stored one, and records a baseline without changes on the first run; `force=True` (also `POST /api/alerts/run?force=true`, `agent alerts-check --force`, the workflow's `force` input) reports every hub as a change for a one-off webhook test.
 4. A notifier posts one JSON webhook per change with hub, name, previous, current, drivers and time; a failed post is logged and does not raise; without a webhook URL nothing is posted.
 5. `agent alerts-check` runs one pass offline (test mode) and prints every hub with its level; exit 0.
 6. `GET /api/alerts` lists the current level per hub; `POST /api/alerts/run` requires the admin token, runs a check and returns the changes.

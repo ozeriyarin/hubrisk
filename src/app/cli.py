@@ -229,12 +229,12 @@ def ingest(start: str = "2016-01-01", end: str = "2025-12-31", hub: list[str] = 
 
 
 @cli.command("alerts-check")
-def alerts_check(test: bool = TEST_FLAG) -> None:
+def alerts_check(test: bool = TEST_FLAG, force: bool = typer.Option(False, "--force", help="report every hub as a change (webhook test)")) -> None:
     """Run one live-risk check over every hub and print the current levels (webhook on changes)."""
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
     app = compose(model_mode="test" if test else None)
     assert app.alerts is not None
-    changes = asyncio.run(app.alerts.run())
+    changes = asyncio.run(app.alerts.run(force=force))
     for risk in app.alerts.current():
         drivers = "; ".join(risk.drivers) or (risk.reason or "")
         typer.echo(f"{risk.hub_id:12s} {risk.label:12s} {drivers}")

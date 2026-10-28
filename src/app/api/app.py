@@ -106,12 +106,12 @@ def create_app(
         return alerts.current() if alerts else []
 
     @app.post("/api/alerts/run", response_model=list[Change])
-    async def alerts_run(authorization: str | None = Header(default=None)) -> list[Change]:
-        """Run one live-risk check now (webhook-triggered); returns the hubs whose level changed."""
+    async def alerts_run(force: bool = False, authorization: str | None = Header(default=None)) -> list[Change]:
+        """Run one live-risk check now (webhook-triggered); returns the hubs whose level changed. force=true reports every hub."""
         require_admin(authorization)
         if alerts is None:
             raise HTTPException(status_code=503, detail="alerts not configured")
-        return await alerts.run()
+        return await alerts.run(force=force)
 
     @app.get("/", include_in_schema=False)
     async def index() -> FileResponse:

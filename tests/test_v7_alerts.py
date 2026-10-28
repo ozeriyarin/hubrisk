@@ -103,6 +103,10 @@ async def test_criterion_3_run_check_baseline_then_changes(tmp_path: Path):
     assert second[0].name and second[0].current_label in ("none", "warning")
     third = await run_check(registry, ScriptedNWS({"miami": [("Hurricane Warning", "Extreme")]}), store)
     assert third == []
+    forced = await run_check(registry, ScriptedNWS({"miami": [("Hurricane Warning", "Extreme")]}), store, force=True)
+    assert len(forced) == 15 and {c.previous_label for c in forced} <= {"none", "warning"}
+    fresh = await run_check(registry, ScriptedNWS({}), AlertStore(tmp_path / "fresh.db"), force=True)
+    assert len(fresh) == 15 and all(c.previous is None and c.previous_label == "unknown" for c in fresh)
 
 
 async def test_criterion_4_webhook_notifier():
