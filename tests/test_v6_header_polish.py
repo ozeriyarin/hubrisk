@@ -144,7 +144,7 @@ NL = chr(10)
 
 def test_criterion_13_auto_scroll_on_send_and_answer():
     page = page_source()
-    assert "function scrollToEnd()" in page and "document.body.scrollHeight" in page
+    assert "function scrollToEnd()" in page and "el.scrollTop = el.scrollHeight" in page and "behavior: 'smooth'" not in page
     assert "log.appendChild(d); scrollToEnd();" in page
     after_meta = page[page.index("pending.appendChild(meta);"):]
     assert "scrollToEnd();" in after_meta[:80]
