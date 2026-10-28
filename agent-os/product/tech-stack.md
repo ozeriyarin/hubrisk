@@ -14,7 +14,8 @@ API) is a bonus item.
   `openai:gpt-5.2` → `google-gla:gemini-2.5-flash` via `FallbackModel(fallback_on=[ModelAPIError, truncated])`.
   Per-model HTTP retries with `AsyncHTTPX2TenacityTransport` (429/5xx/network, Retry-After aware, capped);
   vendor SDK retries off; a model whose key is missing is skipped at startup. All-down raises
-  `FallbackExceptionGroup`. Model ids and `config/prices.yaml` verified at kickoff.
+  `FallbackExceptionGroup`. Model ids and `config/prices.yaml` verified at kickoff. Prompt caching of the static prefix (instructions, tool definitions,
+  messages) is on for Anthropic via `models.cache`; cache reads and writes are recorded per turn and per report.
 - **Guard:** regex layer → `Screening(in_scope, injection)` by TypeSafe Jev (`typesafe:jev-latest`), fallback to
   Haiku on error or any field confidence < 0.7. Refusals are fixed strings and spend nothing. If no TypeSafe key:
   Jev via OpenRouter, else Haiku alone (documented in DESIGN.md).
