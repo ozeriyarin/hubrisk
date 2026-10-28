@@ -4,8 +4,8 @@ This folder is the full working session with the AI agent (Claude Code in the Cl
 HubRisk: product planning, standards, every spec shaped in plan mode, the implementation, test runs, live eval
 runs, deployment verification and the closing docs. It is a deliverable of the assignment.
 
-Exported with the desktop app's session Export on 2026-10-28 11:21 UTC and packaged by
-a small script (raw files copied, one readable rendering generated). About 23 user turns.
+Exported with the desktop app's session Export on 2026-10-28 12:21 UTC and packaged by
+a small script (raw files copied, one readable rendering generated). About 27 user turns.
 
 ## Files
 
